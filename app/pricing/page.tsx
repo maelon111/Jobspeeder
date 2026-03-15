@@ -37,6 +37,7 @@ const PLANS = [
     href: '/register',
     featured: false,
     elite: false,
+    gold: false,
     icon: Zap,
   },
   {
@@ -49,10 +50,12 @@ const PLANS = [
     href: '/register',
     featured: false,
     elite: false,
+    gold: true,
     icon: Star,
   },
   {
     id: 'platinum',
+    gold: false,
     name: 'PLATINUM',
     tagline: 'Pour maximiser vos chances',
     monthly: 59,
@@ -74,6 +77,7 @@ const PLANS = [
     href: '/register',
     featured: false,
     elite: true,
+    gold: false,
     icon: Crown,
   },
 ]
@@ -220,6 +224,8 @@ export default function PricingPage() {
                     ? 'ring-2 ring-brand shadow-[0_0_60px_rgba(0,255,136,0.15)] scale-105 lg:scale-105 z-10 bg-[#0a1a12]'
                     : plan.elite
                     ? 'ring-1 ring-yellow-500/40 bg-gradient-to-b from-[#12100a] to-[#0a0c16]'
+                    : plan.gold
+                    ? 'ring-1 ring-blue-400/35 bg-gradient-to-b from-[#080e1a] to-[#060c16] shadow-[0_0_30px_rgba(96,165,250,0.08)] scale-[1.02] z-[5]'
                     : 'ring-1 ring-white/[0.07] bg-white/[0.02]'
                 }`}
               >
@@ -234,17 +240,21 @@ export default function PricingPage() {
                 {plan.elite && (
                   <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-500/60 to-transparent rounded-t-2xl" />
                 )}
+                {/* Gold top border */}
+                {plan.gold && (
+                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent rounded-t-2xl" />
+                )}
 
                 <div className="p-6 flex flex-col flex-1">
                   {/* Plan header */}
                   <div className="mb-6">
                     <div className={`inline-flex p-2 rounded-xl mb-3 ${
-                      plan.featured ? 'bg-brand/20' : plan.elite ? 'bg-yellow-500/10' : 'bg-white/5'
+                      plan.featured ? 'bg-brand/20' : plan.elite ? 'bg-yellow-500/10' : plan.gold ? 'bg-blue-400/15' : 'bg-white/5'
                     }`}>
-                      <Icon size={18} className={plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : 'text-white/40'} />
+                      <Icon size={18} className={plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : plan.gold ? 'text-blue-400' : 'text-white/40'} />
                     </div>
                     <div className={`text-xs font-bold tracking-widest mb-1 ${
-                      plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : 'text-white/35'
+                      plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : plan.gold ? 'text-blue-400' : 'text-white/35'
                     }`}>
                       {plan.name}
                     </div>
@@ -281,7 +291,7 @@ export default function PricingPage() {
                             val === false ? 'text-white/25 line-through' : f.highlight ? 'text-white/90 font-semibold' : 'text-white/55'
                           }`}>
                             {f.highlight && typeof val === 'number'
-                              ? <><span className={`font-bold text-sm ${plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : 'text-white/80'}`}>{val}</span> profil{(val as number) > 1 ? 's' : ''} CV</>
+                              ? <><span className={`font-bold text-sm ${plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : plan.gold ? 'text-blue-400' : 'text-white/80'}`}>{val}</span> profil{(val as number) > 1 ? 's' : ''} CV</>
                               : f.label
                             }
                             {!f.highlight && typeof val === 'number' && ` : ${val}`}
@@ -300,6 +310,8 @@ export default function PricingPage() {
                         ? 'bg-brand text-black hover:bg-brand/90 shadow-brand'
                         : plan.elite
                         ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border border-yellow-500/40 text-yellow-300 hover:border-yellow-500/70'
+                        : plan.gold
+                        ? 'bg-blue-500/15 border border-blue-400/40 text-blue-300 hover:bg-blue-500/25 hover:border-blue-400/60'
                         : 'bg-white/[0.06] border border-white/[0.08] text-white/70 hover:bg-white/[0.1] hover:text-white'
                     }`}
                   >
@@ -351,11 +363,13 @@ export default function PricingPage() {
                     ? 'bg-brand/10 border border-brand/25'
                     : plan.elite
                     ? 'bg-yellow-500/5 border border-yellow-500/20'
+                    : plan.gold
+                    ? 'bg-blue-500/5 border border-blue-400/20'
                     : 'bg-white/[0.02] border border-white/[0.06]'
                 }`}
               >
-                <Users size={20} className={`mx-auto mb-2 ${plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : 'text-white/30'}`} />
-                <div className={`text-3xl font-bold mb-1 ${plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : 'text-white/70'}`}>
+                <Users size={20} className={`mx-auto mb-2 ${plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : plan.gold ? 'text-blue-400' : 'text-white/30'}`} />
+                <div className={`text-3xl font-bold mb-1 ${plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : plan.gold ? 'text-blue-400' : 'text-white/70'}`}>
                   {FEATURES.find(f => f.highlight)?.values[i]}
                 </div>
                 <div className="text-xs text-white/35 font-medium">{plan.name}</div>

@@ -47,6 +47,12 @@ export default function LandingPage() {
                   <Link href="/register" className="text-xs text-white/35 hover:text-white/70 transition-colors">S&apos;inscrire</Link>
                 </div>
               </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] uppercase tracking-widest text-white/20 font-semibold">Produit</span>
+                <div className="flex flex-col gap-1.5">
+                  <Link href="/pricing" className="text-xs text-white/35 hover:text-white/70 transition-colors">Tarifs</Link>
+                </div>
+              </div>
             </div>
           </div>
 

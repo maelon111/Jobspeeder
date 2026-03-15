@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Zap, LayoutDashboard, FileText, Bot, Settings, LogOut, ChevronRight, Menu, ChevronDown, Briefcase } from 'lucide-react'
+import { Zap, LayoutDashboard, FileText, Bot, Settings, LogOut, ChevronRight, Menu, ChevronDown, Briefcase, CreditCard } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
 import { Footer } from '@/components/Footer'
@@ -87,6 +87,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* Bottom */}
         <div className="px-3 pb-4 space-y-1 border-t border-white/[0.06] pt-3">
+          <Link
+            href="/pricing"
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-white/35 hover:text-white/70 hover:bg-white/[0.04] transition-all duration-150"
+          >
+            <CreditCard size={16} />
+            Tarifs
+          </Link>
           <div className="px-2 py-1.5">
             <LanguageSwitcher />
           </div>

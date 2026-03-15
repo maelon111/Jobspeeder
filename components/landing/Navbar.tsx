@@ -83,6 +83,12 @@ export function Navbar() {
           {/* Desktop */}
           <div className="hidden sm:flex items-center gap-2">
             <Link
+              href="/pricing"
+              className="text-sm text-white/55 hover:text-white transition-colors px-4 py-2 rounded-xl hover:bg-white/5"
+            >
+              Tarifs
+            </Link>
+            <Link
               href="/login"
               className="text-sm text-white/55 hover:text-white transition-colors px-4 py-2 rounded-xl hover:bg-white/5"
             >
@@ -117,6 +123,13 @@ export function Navbar() {
               className="sm:hidden overflow-hidden"
             >
               <div className="flex flex-col gap-2 pt-3 pb-1">
+                <Link
+                  href="/pricing"
+                  onClick={closeMenu}
+                  className="text-sm text-white/60 hover:text-white transition-colors px-4 py-2.5 rounded-xl hover:bg-white/8 text-center"
+                >
+                  Tarifs
+                </Link>
                 <Link
                   href="/login"
                   onClick={closeMenu}
