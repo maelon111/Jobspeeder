@@ -95,20 +95,24 @@ export default function CVPage() {
       .then(r => r.json())
       .then(data => {
         const hidden = getHidden()
-        const visible = (data.profiles || []).filter((p: UserProfile) => !hidden.includes(p.profil_id ?? ''))
+        const withKeys = (data.profiles || []).map((p: UserProfile, i: number) => ({
+          ...p,
+          _key: p.profil_id ?? p.email ?? String(i),
+        }))
+        const visible = withKeys.filter((p: UserProfile & { _key: string }) => !hidden.includes(p._key))
         setProfiles(visible)
-        if (visible.length > 0) setExpandedId(visible[0].profil_id)
+        if (visible.length > 0) setExpandedId(visible[0]._key)
       })
       .finally(() => setLoading(false))
   }, [])
 
-  function handleDelete(profilId: string | null) {
-    if (!profilId) return
-    setDeletingId(profilId)
+  function handleDelete(key: string) {
+    if (!key) return
+    setDeletingId(key)
     setTimeout(() => {
-      addHidden(profilId)
-      setProfiles(prev => prev.filter(p => p.profil_id !== profilId))
-      if (expandedId === profilId) setExpandedId(null)
+      addHidden(key)
+      setProfiles(prev => prev.filter(p => (p as UserProfile & { _key: string })._key !== key))
+      if (expandedId === key) setExpandedId(null)
       setDeletingId('')
     }, 300)
   }
@@ -152,14 +156,15 @@ export default function CVPage() {
         <div className="space-y-4">
           <AnimatePresence>
             {profiles.map((p, i) => {
-              const isExpanded = expandedId === p.profil_id
+              const key = (p as UserProfile & { _key: string })._key ?? String(i)
+              const isExpanded = expandedId === key
               const skills = getSkills(p)
               const experiences = getExperiences(p)
               const fullName = [p.first_name, p.last_name].filter(Boolean).join(' ')
 
               return (
                 <motion.div
-                  key={p.profil_id ?? i}
+                  key={key}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
@@ -191,18 +196,18 @@ export default function CVPage() {
                         </a>
                       )}
                       <button
-                        onClick={() => handleDelete(p.profil_id)}
-                        disabled={!!deletingId && deletingId === p.profil_id}
+                        onClick={() => handleDelete(key)}
+                        disabled={!!deletingId && deletingId === key}
                         className="p-2 text-white/20 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/5"
                         title="Supprimer ce profil"
                       >
-                        {deletingId && deletingId === p.profil_id
+                        {deletingId && deletingId === key
                           ? <RefreshCw size={14} className="animate-spin" />
                           : <Trash2 size={14} />
                         }
                       </button>
                       <button
-                        onClick={() => setExpandedId(isExpanded ? null : (p.profil_id ?? String(i)))}
+                        onClick={() => setExpandedId(isExpanded ? null : key)}
                         className="p-2 text-white/30 hover:text-white transition-colors rounded-lg hover:bg-white/5"
                       >
                         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
