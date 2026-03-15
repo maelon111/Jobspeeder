@@ -39,6 +39,7 @@ const t = {
     nav: {
       dashboard: 'Dashboard',
       applications: 'Candidature automatique',
+      jobOffers: "Offres d'emploi",
       cv: 'Mes CVs',
       settings: 'Paramètres',
       logout: 'Déconnexion',
@@ -94,6 +95,7 @@ const t = {
     nav: {
       dashboard: 'Dashboard',
       applications: 'Auto Applications',
+      jobOffers: 'Job Offers',
       cv: 'My CVs',
       settings: 'Settings',
       logout: 'Log out',
@@ -147,6 +149,7 @@ const t = {
     nav: {
       dashboard: 'Panel',
       applications: 'Candidatura Automática',
+      jobOffers: 'Ofertas de empleo',
       cv: 'Mis CVs',
       settings: 'Ajustes',
       logout: 'Cerrar sesión',

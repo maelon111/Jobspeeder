@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Zap, LayoutDashboard, FileText, Bot, Settings, LogOut, ChevronRight, Menu, ChevronDown } from 'lucide-react'
+import { Zap, LayoutDashboard, FileText, Bot, Settings, LogOut, ChevronRight, Menu, ChevronDown, Briefcase } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
 import { Footer } from '@/components/Footer'
@@ -35,6 +35,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: '/dashboard', label: tr.nav.dashboard, icon: LayoutDashboard },
     { href: '/applications', label: tr.nav.applications, icon: Bot },
+    { href: '/job-offers', label: tr.nav.jobOffers, icon: Briefcase },
     { href: '/cv', label: tr.nav.cv, icon: FileText },
     { href: '/settings', label: tr.nav.settings, icon: Settings },
   ]
