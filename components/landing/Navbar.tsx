@@ -34,21 +34,13 @@ export function Navbar() {
 
   const toggleMenu = useCallback(() => {
     setIsOpen(prev => {
-      if (prev) {
-        if (timerRef.current) {
-          clearTimeout(timerRef.current)
-          timerRef.current = null
-        }
-        return false
-      } else {
-        return true
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
       }
+      return !prev
     })
   }, [])
-
-  useEffect(() => {
-    if (isOpen) startAutoCloseTimer()
-  }, [isOpen, startAutoCloseTimer])
 
   useEffect(() => {
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
