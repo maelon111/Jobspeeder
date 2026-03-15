@@ -93,7 +93,7 @@ const FAQS = [
   },
   {
     q: 'Comment fonctionne la garantie 14 jours ?',
-    a: "Si vous n'êtes pas satisfait dans les 14 jours suivant votre premier abonnement payant, nous vous remboursons intégralement, sans condition ni question. Contactez simplement notre support.",
+    a: "Si vous n'êtes pas satisfait dans les 7 jours suivant votre premier abonnement payant, nous vous remboursons, sous condition. Contactez simplement notre support.",
   },
   {
     q: 'Les candidatures sont-elles vraiment automatiques ?',
@@ -334,9 +334,9 @@ export default function PricingPage() {
             <Shield size={28} className="text-brand" />
           </div>
           <div className="text-center sm:text-left">
-            <div className="font-semibold text-white mb-1">Satisfait ou remboursé — 14 jours</div>
+            <div className="font-semibold text-white mb-1">Satisfait ou remboursé — 7 jours</div>
             <p className="text-sm text-white/40">
-              Pas convaincu dans les 14 jours ? Nous vous remboursons intégralement, sans condition.
+              Pas convaincu dans les 7 jours ? Nous vous remboursons, sous condition.
             </p>
           </div>
         </motion.div>
