@@ -1,0 +1,172 @@
+import type { Language } from './i18n'
+
+const t = {
+  fr: {
+    // Auth
+    login: {
+      title: 'Bon retour !',
+      subtitle: 'Connectez-vous à votre compte',
+      email: 'Email',
+      password: 'Mot de passe',
+      submit: 'Se connecter',
+      google: 'Continuer avec Google',
+      demo: 'Essayer la démo instantanée',
+      demoLoading: 'Connexion...',
+      noAccount: 'Pas encore de compte ?',
+      createAccount: 'Créer un compte',
+      invalidCredentials: 'Email ou mot de passe incorrect',
+    },
+    register: {
+      title: 'Créer un compte',
+      subtitle: 'Commencez à postuler automatiquement',
+      name: 'Nom complet',
+      namePlaceholder: 'Jean Dupont',
+      email: 'Email',
+      password: 'Mot de passe',
+      passwordHint: '8 caractères minimum',
+      passwordError: 'Le mot de passe doit contenir au moins 8 caractères',
+      submit: 'Créer mon compte',
+      google: 'Continuer avec Google',
+      demo: 'Essayer la démo instantanée',
+      demoLoading: 'Connexion...',
+      terms: "En créant un compte, vous acceptez nos",
+      termsLink: "conditions d'utilisation",
+      hasAccount: 'Déjà un compte ?',
+      login: 'Se connecter',
+      divider: 'ou créer un compte',
+    },
+    // Nav
+    nav: {
+      dashboard: 'Dashboard',
+      applications: 'Candidature automatique',
+      cv: 'Mes CVs',
+      settings: 'Paramètres',
+      logout: 'Déconnexion',
+    },
+    // Footer
+    footer: {
+      privacy: 'Confidentialité',
+      terms: 'CGU',
+      cookies: 'Cookies',
+      contact: 'Problème technique, demande ou suggestion ?',
+      rights: '© 2025 JobSpeeder. Tous droits réservés.',
+    },
+    // Legal
+    legal: {
+      backHome: '← Retour',
+      lastUpdated: 'Dernière mise à jour',
+    },
+  },
+
+  en: {
+    login: {
+      title: 'Welcome back!',
+      subtitle: 'Sign in to your account',
+      email: 'Email',
+      password: 'Password',
+      submit: 'Sign in',
+      google: 'Continue with Google',
+      demo: 'Try instant demo',
+      demoLoading: 'Signing in...',
+      noAccount: 'No account yet?',
+      createAccount: 'Create account',
+      invalidCredentials: 'Invalid email or password',
+    },
+    register: {
+      title: 'Create an account',
+      subtitle: 'Start applying automatically',
+      name: 'Full name',
+      namePlaceholder: 'John Smith',
+      email: 'Email',
+      password: 'Password',
+      passwordHint: 'At least 8 characters',
+      passwordError: 'Password must be at least 8 characters',
+      submit: 'Create account',
+      google: 'Continue with Google',
+      demo: 'Try instant demo',
+      demoLoading: 'Signing in...',
+      terms: 'By creating an account, you agree to our',
+      termsLink: 'terms of service',
+      hasAccount: 'Already have an account?',
+      login: 'Sign in',
+      divider: 'or create an account',
+    },
+    nav: {
+      dashboard: 'Dashboard',
+      applications: 'Auto Applications',
+      cv: 'My CVs',
+      settings: 'Settings',
+      logout: 'Log out',
+    },
+    footer: {
+      privacy: 'Privacy',
+      terms: 'Terms',
+      cookies: 'Cookies',
+      contact: 'Technical issue, request or suggestion?',
+      rights: '© 2025 JobSpeeder. All rights reserved.',
+    },
+    legal: {
+      backHome: '← Back',
+      lastUpdated: 'Last updated',
+    },
+  },
+
+  es: {
+    login: {
+      title: '¡Bienvenido de nuevo!',
+      subtitle: 'Inicia sesión en tu cuenta',
+      email: 'Email',
+      password: 'Contraseña',
+      submit: 'Iniciar sesión',
+      google: 'Continuar con Google',
+      demo: 'Probar demo instantánea',
+      demoLoading: 'Conectando...',
+      noAccount: '¿Aún no tienes cuenta?',
+      createAccount: 'Crear cuenta',
+      invalidCredentials: 'Email o contraseña incorrectos',
+    },
+    register: {
+      title: 'Crear una cuenta',
+      subtitle: 'Empieza a postularte automáticamente',
+      name: 'Nombre completo',
+      namePlaceholder: 'Juan García',
+      email: 'Email',
+      password: 'Contraseña',
+      passwordHint: 'Mínimo 8 caracteres',
+      passwordError: 'La contraseña debe tener al menos 8 caracteres',
+      submit: 'Crear cuenta',
+      google: 'Continuar con Google',
+      demo: 'Probar demo instantánea',
+      demoLoading: 'Conectando...',
+      terms: 'Al crear una cuenta, aceptas nuestros',
+      termsLink: 'términos de uso',
+      hasAccount: '¿Ya tienes cuenta?',
+      login: 'Iniciar sesión',
+      divider: 'o crear una cuenta',
+    },
+    nav: {
+      dashboard: 'Panel',
+      applications: 'Candidatura Automática',
+      cv: 'Mis CVs',
+      settings: 'Ajustes',
+      logout: 'Cerrar sesión',
+    },
+    footer: {
+      privacy: 'Privacidad',
+      terms: 'Términos',
+      cookies: 'Cookies',
+      contact: '¿Problema técnico, solicitud o sugerencia?',
+      rights: '© 2025 JobSpeeder. Todos los derechos reservados.',
+    },
+    legal: {
+      backHome: '← Volver',
+      lastUpdated: 'Última actualización',
+    },
+  },
+} as const
+
+export type Translations = typeof t['fr']
+
+export function useT(lang: Language): Translations {
+  return t[lang] as Translations
+}

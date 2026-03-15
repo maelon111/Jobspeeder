@@ -2,17 +2,21 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
-import { StatusBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import {
-  Briefcase, Search, ExternalLink, RefreshCw,
-  ChevronLeft, ChevronRight, Plus, Trash2, StickyNote,
+  Briefcase, Search, RefreshCw,
+  ChevronLeft, ChevronRight,
   Zap, Upload, FileText, CheckCircle2
 } from 'lucide-react'
-import type { Application, ApplicationStatus } from '@/types/supabase'
-import { formatRelativeDate } from '@/lib/utils'
+
+type JobOffer = {
+  titre: string
+  entreprise_nom: string
+  logo_entreprise: string | null
+  date: string | null
+}
 
 const CONTRACT_TYPES = ['CDI', 'CDD', 'Freelance', 'Stage', 'Alternance']
 const COUNTRIES = [
@@ -29,31 +33,14 @@ const COUNTRIES = [
 ]
 const WORK_MODES = ['Présentiel', 'Distanciel', 'Hybride']
 
-const STATUS_OPTIONS: { value: ApplicationStatus | 'all'; label: string }[] = [
-  { value: 'all', label: 'Tous' },
-  { value: 'pending', label: 'En attente' },
-  { value: 'sent', label: 'Envoyée' },
-  { value: 'viewed', label: 'Vue' },
-  { value: 'interview', label: 'Entretien' },
-  { value: 'rejected', label: 'Refusée' },
-]
-
 const PER_PAGE = 20
 
 export default function ApplicationsPage() {
-  const [applications, setApplications] = useState<Application[]>([])
+  const [jobs, setJobs] = useState<JobOffer[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all')
   const [page, setPage] = useState(0)
   const [total, setTotal] = useState(0)
-  const [selectedApp, setSelectedApp] = useState<Application | null>(null)
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-
-  // New application form
-  const [newApp, setNewApp] = useState({ company: '', job_title: '', job_url: '', notes: '' })
-  const [saving, setSaving] = useState(false)
 
   // Campaign form
   const [showCampaignModal, setShowCampaignModal] = useState(false)
@@ -66,6 +53,9 @@ export default function ApplicationsPage() {
     pays: '',
     contrat: [] as string[],
     mode: '',
+    salary_expectation: '',
+    availability: 'Immédiate',
+    work_authorization: 'Oui, sans restriction',
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -79,7 +69,7 @@ export default function ApplicationsPage() {
   }
 
   function resetCampaign() {
-    setCampaignForm({ cv: null, poste: '', ville: '', pays: '', contrat: [], mode: '' })
+    setCampaignForm({ cv: null, poste: '', ville: '', pays: '', contrat: [], mode: '', salary_expectation: '', availability: 'Immédiate', work_authorization: 'Oui, sans restriction' })
     setCampaignSuccess(false)
     setShowCampaignModal(false)
   }
@@ -124,6 +114,9 @@ export default function ApplicationsPage() {
           pays,
           type_contrat: contrat,
           mode_travail: mode,
+          salary_expectation: campaignForm.salary_expectation || null,
+          availability: campaignForm.availability,
+          work_authorization: campaignForm.work_authorization,
           launched_at: new Date().toISOString(),
         }),
       })
@@ -139,74 +132,24 @@ export default function ApplicationsPage() {
     }
   }
 
-  const load = useCallback(async () => {
+  const loadJobs = useCallback(async () => {
     setLoading(true)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    let query = supabase
-      .from('applications')
-      .select('*', { count: 'exact' })
-      .eq('user_id', user.id)
-      .order('applied_at', { ascending: false })
-      .range(page * PER_PAGE, (page + 1) * PER_PAGE - 1)
-
-    if (statusFilter !== 'all') query = query.eq('status', statusFilter)
-    if (search.trim()) {
-      query = query.or(`company.ilike.%${search}%,job_title.ilike.%${search}%`)
-    }
-
-    const { data, count } = await query
-    setApplications((data || []) as Application[])
-    setTotal(count || 0)
+    const params = new URLSearchParams({
+      limit: String(PER_PAGE),
+      offset: String(page * PER_PAGE),
+    })
+    if (search.trim()) params.set('search', search.trim())
+    const res = await fetch(`/api/job-offers?${params}`)
+    const data = await res.json()
+    setJobs(data.jobs || [])
+    setTotal(data.total || 0)
     setLoading(false)
-  }, [page, statusFilter, search])
+  }, [page, search])
 
   useEffect(() => {
-    const t = setTimeout(load, search ? 400 : 0)
+    const t = setTimeout(loadJobs, search ? 400 : 0)
     return () => clearTimeout(t)
-  }, [load, search])
-
-  async function handleAdd() {
-    if (!newApp.company || !newApp.job_title) return
-    setSaving(true)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    await supabase.from('applications').insert({
-      user_id: user.id,
-      company: newApp.company,
-      job_title: newApp.job_title,
-      job_url: newApp.job_url || null,
-      notes: newApp.notes || null,
-      applied_via: 'manual',
-      status: 'pending',
-      applied_at: new Date().toISOString(),
-    })
-
-    setNewApp({ company: '', job_title: '', job_url: '', notes: '' })
-    setShowAddModal(false)
-    setSaving(false)
-    load()
-  }
-
-  async function handleDelete(id: string) {
-    setDeletingId(id)
-    const supabase = createClient()
-    await supabase.from('applications').delete().eq('id', id)
-    setDeletingId(null)
-    if (selectedApp?.id === id) setSelectedApp(null)
-    load()
-  }
-
-  async function handleStatusChange(id: string, status: ApplicationStatus) {
-    const supabase = createClient()
-    await supabase.from('applications').update({ status }).eq('id', id)
-    setApplications(prev => prev.map(a => a.id === id ? { ...a, status } : a))
-    if (selectedApp?.id === id) setSelectedApp(prev => prev ? { ...prev, status } : null)
-  }
+  }, [loadJobs, search])
 
   const totalPages = Math.ceil(total / PER_PAGE)
 
@@ -222,45 +165,22 @@ export default function ApplicationsPage() {
           <h1 className="text-2xl font-bold">Candidature automatique</h1>
           <p className="text-white/40 mt-1">{total} candidature{total !== 1 ? 's' : ''} au total</p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="secondary" onClick={() => setShowAddModal(true)}>
-            <Plus size={16} />
-            Ajouter manuellement
-          </Button>
-          <Button onClick={() => { setCampaignSuccess(false); setShowCampaignModal(true) }}>
-            <Zap size={16} />
-            Nouvelle campagne
-          </Button>
-        </div>
+        <Button onClick={() => { setCampaignSuccess(false); setShowCampaignModal(true) }}>
+          <Zap size={16} />
+          Nouvelle campagne
+        </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-          <input
-            type="text"
-            placeholder="Rechercher entreprise, poste..."
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(0) }}
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-brand/50"
-          />
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {STATUS_OPTIONS.map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => { setStatusFilter(opt.value); setPage(0) }}
-              className={`px-3 py-2 rounded-xl text-xs font-medium border transition-colors ${
-                statusFilter === opt.value
-                  ? 'bg-brand/20 border-brand/30 text-brand'
-                  : 'bg-white/5 border-white/10 text-white/50 hover:text-white'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+      {/* Search */}
+      <div className="relative mb-6">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+        <input
+          type="text"
+          placeholder="Rechercher entreprise, poste..."
+          value={search}
+          onChange={e => { setSearch(e.target.value); setPage(0) }}
+          className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-brand/50"
+        />
       </div>
 
       {/* Table */}
@@ -270,7 +190,7 @@ export default function ApplicationsPage() {
             <RefreshCw size={20} className="animate-spin mr-2" />
             Chargement...
           </div>
-        ) : applications.length === 0 ? (
+        ) : jobs.length === 0 ? (
           <div className="text-center py-20">
             <div className="p-4 bg-white/5 rounded-2xl inline-flex mb-4">
               <Briefcase size={32} className="text-white/20" />
@@ -285,55 +205,36 @@ export default function ApplicationsPage() {
                   <tr className="border-b border-white/8">
                     <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Poste</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Entreprise</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider hidden md:table-cell">Via</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Statut</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider hidden sm:table-cell">Date</th>
-                    <th className="px-6 py-3" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {applications.map((app) => (
-                    <tr
-                      key={app.id}
-                      className="hover:bg-white/3 transition-colors cursor-pointer"
-                      onClick={() => setSelectedApp(app)}
-                    >
+                  {jobs.map((job, i) => (
+                    <tr key={i} className="hover:bg-white/3 transition-colors">
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium">{job.titre}</span>
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{app.job_title}</span>
-                          {app.job_url && (
-                            <a
-                              href={app.job_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={e => e.stopPropagation()}
-                            >
-                              <ExternalLink size={12} className="text-white/30 hover:text-white/60" />
-                            </a>
+                          {job.logo_entreprise && (
+                            <img
+                              src={job.logo_entreprise}
+                              alt=""
+                              className="w-10 h-10 rounded object-contain bg-white/5"
+                              onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                            />
                           )}
+                          <span className="text-sm text-white/60">{job.entreprise_nom || '—'}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-white/60">{app.company}</td>
-                      <td className="px-6 py-4 hidden md:table-cell">
-                        <span className="text-xs text-white/30 capitalize">{app.applied_via}</span>
-                      </td>
                       <td className="px-6 py-4">
-                        <StatusBadge status={app.status} />
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/15 text-blue-400 border border-blue-500/20">
+                          Envoyée
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-xs text-white/30 hidden sm:table-cell">
-                        {formatRelativeDate(app.applied_at)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDelete(app.id) }}
-                          className="text-white/20 hover:text-red-400 transition-colors"
-                          disabled={deletingId === app.id}
-                        >
-                          {deletingId === app.id
-                            ? <RefreshCw size={14} className="animate-spin" />
-                            : <Trash2 size={14} />
-                          }
-                        </button>
+                        {job.date ? new Date(job.date).toLocaleDateString('fr-FR') : '—'}
                       </td>
                     </tr>
                   ))}
@@ -361,78 +262,12 @@ export default function ApplicationsPage() {
         )}
       </motion.div>
 
-      {/* Detail modal */}
-      <Modal open={!!selectedApp} onClose={() => setSelectedApp(null)} title={selectedApp?.job_title || ''}>
-        {selectedApp && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 bg-white/5 rounded-xl">
-                <div className="text-xs text-white/40 mb-1">Entreprise</div>
-                <div className="text-sm font-medium">{selectedApp.company}</div>
-              </div>
-              <div className="p-3 bg-white/5 rounded-xl">
-                <div className="text-xs text-white/40 mb-1">Via</div>
-                <div className="text-sm font-medium capitalize">{selectedApp.applied_via}</div>
-              </div>
-              <div className="p-3 bg-white/5 rounded-xl">
-                <div className="text-xs text-white/40 mb-1">Date</div>
-                <div className="text-sm font-medium">{new Date(selectedApp.applied_at).toLocaleDateString('fr-FR')}</div>
-              </div>
-              {selectedApp.job_url && (
-                <div className="p-3 bg-white/5 rounded-xl">
-                  <div className="text-xs text-white/40 mb-1">Offre</div>
-                  <a href={selectedApp.job_url} target="_blank" rel="noopener noreferrer" className="text-sm text-brand hover:underline flex items-center gap-1">
-                    Voir <ExternalLink size={12} />
-                  </a>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div className="text-xs text-white/40 mb-2">Statut</div>
-              <div className="flex flex-wrap gap-2">
-                {(['pending', 'sent', 'viewed', 'interview', 'rejected'] as ApplicationStatus[]).map(s => (
-                  <button
-                    key={s}
-                    onClick={() => handleStatusChange(selectedApp.id, s)}
-                    className={`transition-all ${selectedApp.status === s ? 'ring-2 ring-white/30 scale-105' : 'opacity-60 hover:opacity-100'}`}
-                  >
-                    <StatusBadge status={s} />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {selectedApp.notes && (
-              <div className="p-3 bg-white/5 rounded-xl">
-                <div className="flex items-center gap-2 text-xs text-white/40 mb-2">
-                  <StickyNote size={12} />
-                  Notes
-                </div>
-                <p className="text-sm text-white/70 whitespace-pre-wrap">{selectedApp.notes}</p>
-              </div>
-            )}
-
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => handleDelete(selectedApp.id)}
-              loading={deletingId === selectedApp.id}
-              className="w-full"
-            >
-              <Trash2 size={14} />
-              Supprimer cette candidature
-            </Button>
-          </div>
-        )}
-      </Modal>
-
       {/* Campaign modal */}
       <Modal
         open={showCampaignModal}
         onClose={resetCampaign}
         title="Nouvelle campagne de candidature automatique"
-        className="max-w-lg"
+        className="max-w-2xl"
       >
         {campaignSuccess ? (
           <div className="flex flex-col items-center gap-4 py-6 text-center">
@@ -484,22 +319,24 @@ export default function ApplicationsPage() {
               </button>
             </div>
 
-            {/* Poste */}
-            <Input
-              label="Poste recherché *"
-              placeholder="Développeur Full Stack, Chef de projet..."
-              value={campaignForm.poste}
-              onChange={e => setCampaignForm(prev => ({ ...prev, poste: e.target.value }))}
-            />
-
-            {/* Ville + Pays */}
+            {/* Poste + Ville */}
             <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Poste recherché *"
+                placeholder="Développeur Full Stack..."
+                value={campaignForm.poste}
+                onChange={e => setCampaignForm(prev => ({ ...prev, poste: e.target.value }))}
+              />
               <Input
                 label="Ville *"
                 placeholder="Paris, Lyon..."
                 value={campaignForm.ville}
                 onChange={e => setCampaignForm(prev => ({ ...prev, ville: e.target.value }))}
               />
+            </div>
+
+            {/* Pays + Salaire */}
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium text-white/70 block mb-1.5">Pays *</label>
                 <select
@@ -512,6 +349,16 @@ export default function ApplicationsPage() {
                     <option key={country} value={country} className="bg-dark-200">{country}</option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-white/70 block mb-1.5">Prétentions salariales</label>
+                <input
+                  type="text"
+                  placeholder="Ex: 45 000€ / an, Négociable..."
+                  value={campaignForm.salary_expectation}
+                  onChange={e => setCampaignForm(prev => ({ ...prev, salary_expectation: e.target.value }))}
+                  className="w-full bg-dark-200 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-brand/50"
+                />
               </div>
             </div>
 
@@ -539,28 +386,58 @@ export default function ApplicationsPage() {
               </div>
             </div>
 
-            {/* Mode de travail */}
-            <div>
-              <label className="text-sm font-medium text-white/70 block mb-2">Mode de travail *</label>
-              <div className="flex gap-2">
-                {WORK_MODES.map(mode => {
-                  const selected = campaignForm.mode === mode
-                  return (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setCampaignForm(prev => ({ ...prev, mode }))}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                        selected
-                          ? 'bg-brand/20 border-brand/40 text-brand'
-                          : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-white/20'
-                      }`}
-                    >
-                      {mode}
-                    </button>
-                  )
-                })}
+            {/* Mode de travail + Disponibilité */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium text-white/70 block mb-2">Mode de travail *</label>
+                <div className="flex gap-2">
+                  {WORK_MODES.map(mode => {
+                    const selected = campaignForm.mode === mode
+                    return (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setCampaignForm(prev => ({ ...prev, mode }))}
+                        className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                          selected
+                            ? 'bg-brand/20 border-brand/40 text-brand'
+                            : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:border-white/20'
+                        }`}
+                      >
+                        {mode}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
+              <div>
+                <label className="text-sm font-medium text-white/70 block mb-1.5">Disponibilité</label>
+                <select
+                  value={campaignForm.availability}
+                  onChange={e => setCampaignForm(prev => ({ ...prev, availability: e.target.value }))}
+                  className="w-full bg-dark-200 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand/50 appearance-none"
+                >
+                  <option value="Immédiate" className="bg-dark-200">Immédiate</option>
+                  <option value="Entre 1 - 3 mois" className="bg-dark-200">Entre 1 - 3 mois</option>
+                  <option value="Plus de 3 mois" className="bg-dark-200">Plus de 3 mois</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Autorisation de travail */}
+            <div>
+              <label className="text-sm font-medium text-white/70 block mb-1.5">
+                Êtes-vous autorisé(e) à travailler dans le pays où vous postulez ?
+              </label>
+              <select
+                value={campaignForm.work_authorization}
+                onChange={e => setCampaignForm(prev => ({ ...prev, work_authorization: e.target.value }))}
+                className="w-full bg-dark-200 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand/50 appearance-none"
+              >
+                <option value="Oui, sans restriction" className="bg-dark-200">Oui, sans restriction</option>
+                <option value="Oui, avec visa de travail" className="bg-dark-200">Oui, avec visa de travail</option>
+                <option value="Non, je nécessite un visa" className="bg-dark-200">Non, je nécessite un visa</option>
+              </select>
             </div>
 
             {/* Actions */}
@@ -585,52 +462,6 @@ export default function ApplicationsPage() {
         )}
       </Modal>
 
-      {/* Add modal */}
-      <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Ajouter une candidature">
-        <div className="space-y-4">
-          <Input
-            label="Poste *"
-            placeholder="Développeur Full Stack"
-            value={newApp.job_title}
-            onChange={e => setNewApp(p => ({ ...p, job_title: e.target.value }))}
-          />
-          <Input
-            label="Entreprise *"
-            placeholder="Acme Corp"
-            value={newApp.company}
-            onChange={e => setNewApp(p => ({ ...p, company: e.target.value }))}
-          />
-          <Input
-            label="URL de l'offre"
-            placeholder="https://..."
-            value={newApp.job_url}
-            onChange={e => setNewApp(p => ({ ...p, job_url: e.target.value }))}
-          />
-          <div>
-            <label className="text-sm font-medium text-white/70 block mb-1.5">Notes</label>
-            <textarea
-              className="w-full bg-dark-200 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-brand/50 resize-none"
-              placeholder="Informations supplémentaires..."
-              rows={3}
-              value={newApp.notes}
-              onChange={e => setNewApp(p => ({ ...p, notes: e.target.value }))}
-            />
-          </div>
-          <div className="flex gap-3">
-            <Button variant="secondary" onClick={() => setShowAddModal(false)} className="flex-1">
-              Annuler
-            </Button>
-            <Button
-              onClick={handleAdd}
-              loading={saving}
-              disabled={!newApp.company || !newApp.job_title}
-              className="flex-1"
-            >
-              Ajouter
-            </Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   )
 }
