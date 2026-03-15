@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       titre: row.c?.[idx('titre')]?.v ?? '',
       entreprise_nom: row.c?.[idx('entreprise_nom')]?.v ?? '',
       localisation: row.c?.[idx('localisation')]?.v ?? '',
-      remote: row.c?.[idx('remote')]?.v ?? '',
+      remote: row.c?.[idx('remote')]?.v ?? null,
       type_contrat: row.c?.[idx('type_contrat')]?.v ?? '',
       statut_traitement: row.c?.[idx('statut_traitement')]?.v ?? '',
       logo_entreprise: row.c?.[idx('logo_entreprise')]?.v ?? null,

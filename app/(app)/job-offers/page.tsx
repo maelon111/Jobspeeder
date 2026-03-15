@@ -10,7 +10,7 @@ type JobOffer = {
   titre: string
   entreprise_nom: string
   localisation: string
-  remote: string
+  remote: string | boolean | null
   type_contrat: string
   logo_entreprise: string | null
 }
@@ -287,8 +287,12 @@ export default function JobOffersPage() {
 
                   {/* Remote */}
                   <div className="flex items-center gap-1.5">
-                    <Wifi size={12} className="text-white/25 flex-shrink-0" />
-                    <span className="text-sm text-white/50 truncate">{job.remote || 'Non précisé'}</span>
+                    {(job.remote === true || String(job.remote).toLowerCase() === 'true') && (
+                      <>
+                        <Wifi size={12} className="text-brand/60 flex-shrink-0" />
+                        <span className="text-sm text-brand/70 truncate">Remote</span>
+                      </>
+                    )}
                   </div>
 
                   {/* Type contrat */}
