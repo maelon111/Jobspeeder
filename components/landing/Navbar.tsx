@@ -24,14 +24,6 @@ export function Navbar() {
     }
   }, [])
 
-  const startAutoCloseTimer = useCallback(() => {
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => {
-      setIsOpen(false)
-      timerRef.current = null
-    }, 3000)
-  }, [])
-
   const toggleMenu = useCallback(() => {
     setIsOpen(prev => {
       if (timerRef.current) {
