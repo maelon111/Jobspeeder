@@ -3,7 +3,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Search, RefreshCw, Briefcase, MapPin, Wifi, FileText, CheckSquare, Square } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import Image from 'next/image'
 
 type JobOffer = {
