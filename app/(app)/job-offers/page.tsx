@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Search, RefreshCw, Briefcase, MapPin, Wifi, FileText, CheckSquare, Square } from 'lucide-react'
+import { Search, RefreshCw, Briefcase, MapPin, Wifi, FileText, CheckSquare, Square, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import Image from 'next/image'
 
@@ -15,37 +15,47 @@ type JobOffer = {
   logo_entreprise: string | null
 }
 
+const PER_PAGE = 20
+
 export default function JobOffersPage() {
   const [jobs, setJobs] = useState<JobOffer[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [selected, setSelected] = useState<Set<string>>([].reduce((s) => s, new Set<string>()))
+  const [page, setPage] = useState(0)
+  const [total, setTotal] = useState(0)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
   const [applying, setApplying] = useState(false)
   const [applySuccess, setApplySuccess] = useState(false)
   const [logoErrors, setLogoErrors] = useState<Set<string>>(new Set())
 
-  const fetchJobs = useCallback(async (q: string) => {
+  const fetchJobs = useCallback(async (q: string, p: number) => {
     setLoading(true)
     try {
-      const params = new URLSearchParams()
+      const params = new URLSearchParams({ page: String(p) })
       if (q) params.set('search', q)
       const res = await fetch(`/api/available-jobs?${params}`)
       const data = await res.json()
       setJobs(data.jobs || [])
+      setTotal(data.total || 0)
     } catch {
       setJobs([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    fetchJobs('')
+    fetchJobs('', 0)
   }, [fetchJobs])
 
-  // Debounced search
+  // Debounced search — reset to page 0
   useEffect(() => {
-    const t = setTimeout(() => fetchJobs(search), 400)
+    const t = setTimeout(() => {
+      setPage(0)
+      setSelected(new Set())
+      fetchJobs(search, 0)
+    }, 400)
     return () => clearTimeout(t)
   }, [search, fetchJobs])
 
@@ -54,12 +64,17 @@ export default function JobOffersPage() {
   const allKeys = jobs.map((j, i) => jobKey(j, i))
   const allSelected = allKeys.length > 0 && allKeys.every((k) => selected.has(k))
   const someSelected = allKeys.some((k) => selected.has(k))
+  const totalPages = Math.ceil(total / PER_PAGE)
 
   function toggleSelectAll() {
     if (allSelected) {
-      setSelected(new Set())
+      const next = new Set(selected)
+      allKeys.forEach((k) => next.delete(k))
+      setSelected(next)
     } else {
-      setSelected(new Set(allKeys))
+      const next = new Set(selected)
+      allKeys.forEach((k) => next.add(k))
+      setSelected(next)
     }
   }
 
@@ -70,6 +85,11 @@ export default function JobOffersPage() {
       else next.add(key)
       return next
     })
+  }
+
+  function goToPage(p: number) {
+    setPage(p)
+    fetchJobs(search, p)
   }
 
   async function handleApply() {
@@ -95,11 +115,7 @@ export default function JobOffersPage() {
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-3 mb-1">
           <div className="p-2 bg-brand/10 rounded-xl">
             <Briefcase size={20} className="text-brand" />
@@ -124,7 +140,7 @@ export default function JobOffersPage() {
           />
         </div>
         <button
-          onClick={() => fetchJobs(search)}
+          onClick={() => fetchJobs(search, page)}
           className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-white/[0.08] text-white/45 hover:text-white/80 hover:bg-white/[0.04] transition-all text-sm"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -140,7 +156,8 @@ export default function JobOffersPage() {
           className="flex items-center justify-between bg-brand/10 border border-brand/20 rounded-xl px-4 py-3 mb-5"
         >
           <span className="text-sm text-white/70">
-            <span className="text-brand font-semibold">{selected.size}</span> offre{selected.size > 1 ? 's' : ''} sélectionnée{selected.size > 1 ? 's' : ''}
+            <span className="text-brand font-semibold">{selected.size}</span>{' '}
+            offre{selected.size > 1 ? 's' : ''} sélectionnée{selected.size > 1 ? 's' : ''}
           </span>
           <div className="flex gap-2">
             <button
@@ -149,12 +166,7 @@ export default function JobOffersPage() {
             >
               Tout désélectionner
             </button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleApply}
-              disabled={applying}
-            >
+            <Button variant="primary" size="sm" onClick={handleApply} disabled={applying}>
               {applying ? 'Envoi…' : 'Postuler aux offres sélectionnées'}
             </Button>
           </div>
@@ -181,11 +193,10 @@ export default function JobOffersPage() {
               className="text-white/30 hover:text-brand transition-colors"
               title={allSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
             >
-              {allSelected ? (
-                <CheckSquare size={16} className="text-brand" />
-              ) : (
-                <Square size={16} />
-              )}
+              {allSelected
+                ? <CheckSquare size={16} className="text-brand" />
+                : <Square size={16} />
+              }
             </button>
           </div>
           <div />
@@ -226,15 +237,11 @@ export default function JobOffersPage() {
                 >
                   {/* Checkbox */}
                   <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => toggleSelect(key)}
-                      className="text-white/30 hover:text-brand transition-colors"
-                    >
-                      {isSelected ? (
-                        <CheckSquare size={16} className="text-brand" />
-                      ) : (
-                        <Square size={16} />
-                      )}
+                    <button onClick={() => toggleSelect(key)} className="text-white/30 hover:text-brand transition-colors">
+                      {isSelected
+                        ? <CheckSquare size={16} className="text-brand" />
+                        : <Square size={16} />
+                      }
                     </button>
                   </div>
 
@@ -304,9 +311,60 @@ export default function JobOffersPage() {
         )}
       </div>
 
-      {!loading && jobs.length > 0 && (
+      {/* Pagination */}
+      {!loading && totalPages > 1 && (
+        <div className="flex items-center justify-between mt-5">
+          <p className="text-xs text-white/30">
+            {page * PER_PAGE + 1}–{Math.min((page + 1) * PER_PAGE, total)} sur {total} offre{total > 1 ? 's' : ''}
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => goToPage(page - 1)}
+              disabled={page === 0}
+              className="flex items-center justify-center w-8 h-8 rounded-lg border border-white/[0.08] text-white/40 hover:text-white/80 hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronLeft size={15} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i)
+              .filter((i) => i === 0 || i === totalPages - 1 || Math.abs(i - page) <= 1)
+              .reduce<(number | '...')[]>((acc, i, idx, arr) => {
+                if (idx > 0 && typeof arr[idx - 1] === 'number' && (i as number) - (arr[idx - 1] as number) > 1) {
+                  acc.push('...')
+                }
+                acc.push(i)
+                return acc
+              }, [])
+              .map((item, idx) =>
+                item === '...' ? (
+                  <span key={`ellipsis-${idx}`} className="text-white/25 text-xs px-1">…</span>
+                ) : (
+                  <button
+                    key={item}
+                    onClick={() => goToPage(item as number)}
+                    className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${
+                      page === item
+                        ? 'bg-brand text-black'
+                        : 'border border-white/[0.08] text-white/40 hover:text-white/80 hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    {(item as number) + 1}
+                  </button>
+                )
+              )}
+            <button
+              onClick={() => goToPage(page + 1)}
+              disabled={page >= totalPages - 1}
+              className="flex items-center justify-center w-8 h-8 rounded-lg border border-white/[0.08] text-white/40 hover:text-white/80 hover:bg-white/[0.04] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronRight size={15} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!loading && total > 0 && totalPages <= 1 && (
         <p className="text-center text-xs text-white/25 mt-4">
-          {jobs.length} offre{jobs.length > 1 ? 's' : ''} disponible{jobs.length > 1 ? 's' : ''}
+          {total} offre{total > 1 ? 's' : ''} disponible{total > 1 ? 's' : ''}
         </p>
       )}
     </div>
