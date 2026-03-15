@@ -204,7 +204,7 @@ export default function JobOffersPage() {
           <div>Entreprise</div>
           <div>Localisation</div>
           <div>Remote</div>
-          <div>Contrat</div>
+          <div>Type d&apos;emploi</div>
         </div>
 
         {/* Rows */}
@@ -287,12 +287,8 @@ export default function JobOffersPage() {
 
                   {/* Remote */}
                   <div className="flex items-center gap-1.5">
-                    {job.remote && (
-                      <>
-                        <Wifi size={12} className="text-white/25 flex-shrink-0" />
-                        <span className="text-sm text-white/50 truncate">{job.remote}</span>
-                      </>
-                    )}
+                    <Wifi size={12} className="text-white/25 flex-shrink-0" />
+                    <span className="text-sm text-white/50 truncate">{job.remote || 'Non précisé'}</span>
                   </div>
 
                   {/* Type contrat */}
