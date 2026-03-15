@@ -106,15 +106,25 @@ export default function CVPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  function handleDelete(key: string) {
+  async function handleDelete(key: string, profilId: string | null) {
     if (!key) return
     setDeletingId(key)
-    setTimeout(() => {
-      addHidden(key)
-      setProfiles(prev => prev.filter(p => (p as UserProfile & { _key: string })._key !== key))
-      if (expandedId === key) setExpandedId(null)
-      setDeletingId('')
-    }, 300)
+    try {
+      if (profilId) {
+        const res = await fetch('/api/user-profile/delete', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profil_id: profilId }),
+        })
+        if (!res.ok) throw new Error('Delete failed')
+      }
+    } catch {
+      // Fallback: hide locally if API fails
+    }
+    addHidden(key)
+    setProfiles(prev => prev.filter(p => (p as UserProfile & { _key: string })._key !== key))
+    if (expandedId === key) setExpandedId(null)
+    setDeletingId('')
   }
 
   function getSkills(p: UserProfile): string[] {
@@ -196,7 +206,7 @@ export default function CVPage() {
                         </a>
                       )}
                       <button
-                        onClick={() => handleDelete(key)}
+                        onClick={() => handleDelete(key, p.profil_id)}
                         disabled={!!deletingId && deletingId === key}
                         className="p-2 text-white/20 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/5"
                         title="Supprimer ce profil"
