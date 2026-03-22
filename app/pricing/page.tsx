@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Zap, Check, X, Shield, ChevronDown, Star,
-  Users, Crown, Sparkles, Loader2, Linkedin
+  Users, Crown, Sparkles, Loader2
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -117,7 +117,18 @@ function FeatureValue({ val }: { val: string | boolean | number }) {
     return <Check size={17} className="text-brand mx-auto" strokeWidth={2.5} />
   if (val === false)
     return <X size={15} className="text-white/20 mx-auto" strokeWidth={2} />
-  return <span className="text-sm text-white/70 font-medium">{val}</span>
+  return <Check size={17} className="text-brand mx-auto" strokeWidth={2.5} />
+}
+
+function LinkedInLogo({ active }: { active: boolean }) {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+      <rect width="24" height="24" rx="4" fill={active ? '#0A66C2' : 'rgba(255,255,255,0.12)'} />
+      <path d="M7.5 9.5H5V19H7.5V9.5Z" fill="white" />
+      <circle cx="6.25" cy="6.75" r="1.5" fill="white" />
+      <path d="M19 19H16.5V14C16.5 12.9 15.6 12 14.5 12C13.4 12 12.5 12.9 12.5 14V19H10V9.5H12.5V10.8C13.1 9.9 14.2 9.3 15.4 9.3C17.4 9.3 19 10.9 19 12.9V19Z" fill="white" />
+    </svg>
+  )
 }
 
 function FaqItem({ q, a }: { q: string; a: string }) {
@@ -334,7 +345,7 @@ export default function PricingPage() {
                                 : <X size={15} className="text-white/20 mx-auto" strokeWidth={2} />}
                             </div>
                             <span className={`text-xs leading-tight flex items-center gap-1.5 ${val ? 'text-white/55' : 'text-white/25'}`}>
-                              <Linkedin size={13} className={val ? 'text-[#0A66C2] flex-shrink-0' : 'text-white/20 flex-shrink-0'} fill={val ? '#0A66C2' : 'currentColor'} />
+                              <LinkedInLogo active={!!val} />
                               Extension Chrome
                               {val
                                 ? <span className="px-1.5 py-0.5 bg-brand/15 border border-brand/30 text-brand text-[10px] font-semibold rounded-full">Beta</span>
@@ -367,7 +378,7 @@ export default function PricingPage() {
                           <div className="flex-shrink-0 w-4 flex justify-center">
                             <FeatureValue val={val} />
                           </div>
-                          <span className={`text-xs leading-tight flex items-center gap-1.5 flex-wrap ${
+                          <span className={`text-xs leading-tight ${
                             val === false ? 'text-white/25 line-through' : f.highlight ? 'text-white/90 font-semibold' : 'text-white/55'
                           }`}>
                             {f.highlight && typeof val === 'number'
@@ -375,11 +386,6 @@ export default function PricingPage() {
                               : f.label
                             }
                             {!f.highlight && typeof val === 'number' && ` : ${val}`}
-                            {!f.highlight && typeof val === 'string' && (
-                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                                plan.featured ? 'bg-brand/15 text-brand' : plan.elite ? 'bg-yellow-500/10 text-yellow-400' : plan.gold ? 'bg-blue-400/10 text-blue-400' : 'bg-white/[0.06] text-white/40'
-                              }`}>{val}</span>
-                            )}
                           </span>
                         </li>
                       )
