@@ -1,7 +1,36 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import { LanguageProvider } from '@/lib/i18n'
+import { JsonLd } from '@/components/JsonLd'
 import './globals.css'
+
+const SITE_URL = 'https://jobspeeder.online'
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'JobSpeeder',
+  url: SITE_URL,
+  description: "Plateforme d'automatisation de candidatures d'emploi propulsée par l'IA GPT-4o.",
+  inLanguage: 'fr-FR',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${SITE_URL}/register`,
+  },
+}
+
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'JobSpeeder',
+  url: SITE_URL,
+  logo: `${SITE_URL}/logo-v2.png`,
+  contactPoint: {
+    '@type': 'ContactPoint',
+    email: 'info@jobspeeder.online',
+    contactType: 'customer support',
+  },
+}
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -52,6 +81,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
         <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png" />
+        <JsonLd data={websiteSchema} />
+        <JsonLd data={organizationSchema} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#060c16] text-white min-h-screen`}>
         <LanguageProvider>

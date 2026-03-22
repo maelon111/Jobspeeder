@@ -1,0 +1,268 @@
+# JobSpeeder — Full Documentation for AI Agents
+
+> JobSpeeder (https://jobspeeder.online) is a French-language SaaS platform that
+> automates job applications using AI. Users upload a CV, the system optimises it
+> for ATS filters via GPT-4o-mini, then an n8n + Skyvern automation pipeline
+> applies to matching job offers 24/7 on the user's behalf.
+>
+> See the summary version at: https://jobspeeder.online/llms.txt
+
+---
+
+## Description
+
+JobSpeeder is an AI-powered job application automation platform targeting
+French-speaking job seekers. The platform's core promise: "Postulez à 100 offres
+pendant votre sommeil" (Apply to 100 jobs while you sleep).
+
+After a guided 3-step onboarding (personal info → CV build → preferences), the
+system takes over: it continuously scans tens of thousands of job offers, matches
+them against the user's criteria, and submits personalised applications
+automatically — 24 hours a day, 7 days a week.
+
+Key metrics displayed on the landing page:
+- 10 000+ job offers analysed per day
+- 94% application submission success rate
+- 3-minute initial setup time
+- 48-hour average time to first recruiter response
+- 2 400+ active users
+
+---
+
+## Onboarding Flow (4 Steps)
+
+### Step 1 — Personal Information
+Users provide: full name, phone number, location, LinkedIn URL, portfolio URL.
+This data is stored in the `profiles` table in Supabase.
+
+### Step 2 — CV Builder
+Users either import a PDF/DOCX CV or build one from scratch using the integrated
+editor. The CV is structured as a JSON object (`CVContent` type) containing:
+- summary: professional summary paragraph
+- experience: array of {title, company, location, start_date, end_date, description}
+- education: array of {degree, field, school, graduation_year}
+- skills: string array of competencies
+- languages: array of {language, level}
+
+### Step 3 — AI Optimisation
+The CV JSON is sent to the `/api/cv/optimize` endpoint, which calls
+OpenAI GPT-4o-mini with a specialised ATS optimisation system prompt.
+The model rewrites each field to:
+- Use strong action verbs (Developed, Led, Implemented, Optimised, Delivered)
+- Quantify achievements with numbers and metrics
+- Maximise ATS keyword density for the target role
+- Remove personal pronouns
+- Maintain identical JSON structure
+
+### Step 4 — Job Preferences
+Users define their targeting criteria stored in `job_preferences` table:
+- job_title: target job title string
+- location: preferred city/region
+- work_mode: 'remote' | 'on-site' | 'hybrid'
+- work_time: 'full_time' | 'part_time'
+- contract_types: array — CDI, CDD, Freelance, Stage
+- salary_min / salary_max: optional salary band
+- n8n_webhook_url: personal n8n webhook endpoint for the automation trigger
+- is_active: boolean — whether the automation campaign is running
+
+---
+
+## Core Features (Detailed)
+
+### CV Management (`/cv`)
+- Users can maintain multiple CV profiles simultaneously (1–15 depending on plan)
+- Each profile targets a different job type or seniority level
+- Profiles display: target job titles, last update date, CV download link,
+  personal details (name, email, phone, city, country, nationality),
+  work experience (up to 4 entries), education history (up to 2 entries),
+  skills list, languages list, key competencies
+- Hidden profiles are stored in localStorage under `jobspeeder_hidden_profiles`
+- The CV optimisation endpoint uses `model: 'gpt-4o-mini'` with `temperature: 0.3`
+  and `response_format: { type: 'json_object' }` for deterministic output
+
+### Job Offer Discovery (`/job-offers`)
+- Aggregates offers from multiple job boards across 70+ countries
+- Filters: keyword search, contract type (CDI/CDD/Freelance/Stage),
+  job type (fulltime/parttime), country (70+ supported), work mode
+  (Présentiel/Distanciel/Hybride)
+- Results paginated at 20 per page with total count
+- API endpoint: GET `/api/job-offers?search=&country=&job_type=&work_mode=&page=`
+
+### Application Automation Engine
+The automation is a two-component system:
+
+**n8n (orchestration):**
+- n8n is self-hosted at `n8n.jobspeeder.online`
+- Each user configures their personal n8n webhook URL in Settings
+- When a campaign is launched, the frontend POSTs to `/api/campaign/launch`,
+  which relays the payload to the user's n8n webhook
+- The n8n workflow handles: offer sourcing, matching, CV personalisation,
+  application dispatch, and status reporting back via webhook
+
+**Skyvern (browser automation):**
+- Skyvern fills in job application forms on career sites automatically
+- Handles multi-step forms, file uploads, and custom application questions
+- Applied-via field in the database records: 'email' | 'skyvern' | 'manual'
+
+**Application result ingestion:**
+- n8n reports results back to `/api/webhook/n8n` (POST, Bearer token auth)
+- Payload: `{ user_id, company, job_title, job_url, applied_via, status, notes }`
+- Deduplication: existing applications are updated (status progression only),
+  new ones are inserted into the `applications` table
+- Status lifecycle: pending → sent → interview → offer | rejected
+
+### Application Tracker (`/applications`)
+- Real-time dashboard of all applications with pagination (20/page)
+- Columns: company logo, job title, company name, application date, status badge
+- Search by company or job title
+- Campaign launch modal: accepts CV file upload, target position, city, country,
+  contract type, work mode, and salary expectation
+- Status badges: colour-coded (green = interview, blue = sent, yellow = pending)
+
+### LinkedIn Chrome Extension
+- Available on Platinum and Elite plans (Beta)
+- Enables automated applications directly within LinkedIn's interface
+- Extension status shown in the features comparison table on `/pricing`
+
+### Settings (`/settings`)
+- **Profile section**: full name, phone, location, LinkedIn URL, portfolio URL
+- **Preferences section**: job title target, location, work mode, work time,
+  contract types (multi-select), salary range, n8n webhook URL, active toggle
+- Changes saved instantly to Supabase via authenticated API calls
+
+---
+
+## Pricing Plans (Detailed)
+
+### FREE — 0 €/month (forever)
+- 3 applications/day, 20 applications/month
+- 10 job offers proposed/day
+- 1 CV profile
+- Basic email personalisation
+- Application tracking dashboard
+- JobSpeeder AI model 1.0
+- No support
+
+### GOLD — 29 €/month (or 23 €/month billed annually)
+- 10 applications/day, 150 applications/month
+- 50 job offers proposed/day
+- 2 CV profiles
+- Advanced email personalisation
+- Application tracking dashboard
+- JobSpeeder AI model 1.0
+- Email support (48h response)
+
+### PLATINUM — 59 €/month (or 47 €/month billed annually) ⭐ Most popular
+- 25 applications/day, 500 applications/month
+- 200 job offers proposed/day
+- 5 CV profiles
+- Advanced email personalisation
+- Automatic follow-up emails
+- Chrome LinkedIn extension (Beta)
+- JobSpeeder AI model 2.0
+- Priority support (4h response)
+
+### ELITE — 149 €/month (or 119 €/month billed annually)
+- 50 applications/day, 1 500 applications/month
+- 500 job offers proposed/day
+- 15 CV profiles
+- Advanced email personalisation
+- Automatic follow-up emails
+- Chrome LinkedIn extension (Beta)
+- Dedicated account manager
+- JobSpeeder AI model 3.0
+- 24/7 support (chat + phone)
+
+**Billing notes:**
+- Annual plans save 20%
+- Plan changes take effect immediately, prorated billing
+- 7-day money-back guarantee on first paid subscription
+- Payments processed via Stripe; self-serve billing portal at `/api/stripe-portal`
+
+---
+
+## API Endpoints (Public-facing)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | /api/campaign/launch | Session | Launch automation campaign via n8n webhook |
+| POST | /api/cv/optimize | Session | Optimise CV JSON with GPT-4o-mini |
+| GET | /api/job-offers | Session | List job offers with filters |
+| GET | /api/applications | Session | List user applications with pagination |
+| POST | /api/checkout | Session | Create Stripe checkout session |
+| POST | /api/stripe-portal | Session | Open Stripe billing portal |
+| POST | /api/webhook/n8n | Bearer token | Receive application status updates from n8n |
+| POST | /api/webhook/stripe | Stripe sig | Handle Stripe subscription events |
+| POST | /api/auth/demo | None | Demo login endpoint |
+| GET/POST | /api/user-profile | Session | Read/write extended CV profile data |
+| DELETE | /api/user-profile/delete | Session | Delete account and all data |
+| GET/POST | /api/preferences | Session | Read/write job preferences |
+| GET | /api/available-jobs | Session | Count available matching offers |
+
+---
+
+## Database Schema (Key Tables)
+
+**profiles** — User personal information
+Fields: user_id (FK auth.users), full_name, phone, location, linkedin_url,
+portfolio_url, plan, stripe_customer_id, stripe_subscription_id,
+subscription_status, created_at
+
+**job_preferences** — Per-user automation targeting
+Fields: user_id, job_title, location, work_mode, work_time, contract_types,
+salary_min, salary_max, n8n_webhook_url, is_active
+
+**applications** — Application log written by n8n webhook
+Fields: id, user_id, company, job_title, job_url, applied_via, status, notes,
+applied_at, updated_at
+
+**user_profiles** — Extended CV data (parsed from uploaded CV)
+Fields: profil_id, user_id, job_titles_cibles, cv_url, first_name, last_name,
+email, phone, cv_city, cv_country, nationality, driving_license, linkedin,
+years_experience, experience_summary, key_skills, languages, work_experience_1..4,
+highest_degree, education_field, school, graduation_year, poste, localisation,
+contrat, salary_expectation, availability, work_authorization
+
+---
+
+## Tech Stack (Detailed)
+
+| Layer | Technology | Notes |
+|-------|-----------|-------|
+| Framework | Next.js 14.2 (App Router) | Deployed on Vercel (iad1 region) |
+| Styling | Tailwind CSS + custom CSS vars | Dark theme, #060c16 background |
+| Animation | Framer Motion 12 | Page transitions, animated counters |
+| Icons | Lucide React | |
+| Auth | Supabase Auth (email/password) | SSR cookies via @supabase/ssr |
+| Database | Supabase PostgreSQL | Row Level Security enforced |
+| AI | OpenAI API (gpt-4o-mini) | CV optimisation, temperature 0.3 |
+| Automation | n8n (self-hosted) | Per-user webhook-triggered workflows |
+| Browser bot | Skyvern | Form-filling on job application pages |
+| Payments | Stripe | Subscriptions, webhooks, billing portal |
+| PDF | @react-pdf/renderer | CV PDF generation |
+| Middleware | next/server middleware | Auth guard on /dashboard, /cv, etc. |
+| Fonts | Geist Sans + Geist Mono (local) | |
+| PWA | manifest.json + sw.js | Installable, standalone display mode |
+| i18n | Custom LanguageProvider | French primary |
+
+---
+
+## Security & Privacy
+
+- All authenticated routes protected via Next.js middleware (checks Supabase session)
+- n8n webhook endpoint requires Bearer token (`N8N_WEBHOOK_SECRET` env var)
+- Stripe webhooks verified via signature (`STRIPE_WEBHOOK_SECRET`)
+- User data deletion: full cascade delete via `/api/user-profile/delete`
+- Privacy policy: https://jobspeeder.online/confidentialite
+- Cookie policy: https://jobspeeder.online/cookies
+- Terms of service: https://jobspeeder.online/cgu
+- Contact: info@jobspeeder.online
+
+---
+
+## Structured Data (Schema.org)
+
+The following JSON-LD schemas are injected on each page:
+- All pages: WebSite, Organization
+- Homepage (/): SoftwareApplication (with 4 Offer nodes), HowTo (3 steps), BreadcrumbList
+- Pricing (/pricing): FAQPage (5 Q&A), SoftwareApplication (with UnitPriceSpecification), BreadcrumbList

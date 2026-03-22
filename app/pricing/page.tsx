@@ -8,6 +8,9 @@ import {
   Users, Crown, Sparkles, Loader2
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { JsonLd } from '@/components/JsonLd'
+
+const SITE_URL = 'https://jobspeeder.online'
 
 /* ─── Data ─── */
 type Feature = {
@@ -162,6 +165,57 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   )
 }
 
+/* ─── Structured Data ─── */
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQS.map(({ q, a }) => ({
+    '@type': 'Question',
+    name: q,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: a,
+    },
+  })),
+}
+
+const pricingAppSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'JobSpeeder',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  url: SITE_URL,
+  description:
+    "Automatisez vos candidatures d'emploi grâce à l'IA. Notre bot postule à 100 offres pendant votre sommeil.",
+  offers: PLANS.map((plan) => ({
+    '@type': 'Offer',
+    name: plan.name,
+    price: String(plan.monthly),
+    priceCurrency: 'EUR',
+    description: plan.tagline,
+    url: `${SITE_URL}/pricing`,
+    ...(plan.monthly > 0 && {
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: plan.monthly,
+        priceCurrency: 'EUR',
+        billingDuration: 'P1M',
+        billingIncrement: 1,
+      },
+    }),
+  })),
+}
+
+const pricingBreadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Accueil', item: SITE_URL },
+    { '@type': 'ListItem', position: 2, name: 'Tarifs', item: `${SITE_URL}/pricing` },
+  ],
+}
+
 /* ─── Page ─── */
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false)
@@ -204,6 +258,9 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-[#060c16] text-white">
+      <JsonLd data={faqSchema} />
+      <JsonLd data={pricingAppSchema} />
+      <JsonLd data={pricingBreadcrumbSchema} />
       {/* Ambient */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-brand/5 rounded-full blur-[120px]" />
