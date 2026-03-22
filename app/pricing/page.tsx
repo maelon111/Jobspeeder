@@ -346,10 +346,8 @@ export default function PricingPage() {
                             </div>
                             <span className={`text-xs leading-tight flex items-center gap-1.5 ${val ? 'text-white/55' : 'text-white/25'}`}>
                               <LinkedInLogo active={!!val} />
-                              Extension Chrome
-                              {val
-                                ? <span className="px-1.5 py-0.5 bg-brand/15 border border-brand/30 text-brand text-[10px] font-semibold rounded-full">Beta</span>
-                                : <span className="px-1.5 py-0.5 bg-white/5 border border-white/10 text-white/30 text-[10px] rounded-full">Non inclus</span>}
+                              {val ? 'Extension Chrome LinkedIn (Beta)' : 'Extension Chrome LinkedIn'}
+                              {!val && <span className="px-1.5 py-0.5 bg-white/5 border border-white/10 text-white/30 text-[10px] rounded-full">Non inclus</span>}
                             </span>
                           </li>
                         )
