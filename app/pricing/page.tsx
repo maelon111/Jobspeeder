@@ -1,17 +1,21 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   Zap, Check, X, Shield, ChevronDown, Star,
-  Users, Crown, Sparkles
+  Users, Crown, Sparkles, Loader2
 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 /* ─── Data ─── */
 type Feature = {
   label: string
   values: (string | boolean | number)[]
   highlight?: boolean
+  engine?: boolean
+  linkedin?: boolean
 }
 
 const FEATURES: Feature[] = [
@@ -24,6 +28,8 @@ const FEATURES: Feature[] = [
   { label: 'Relances automatiques',  values: [false, false, true, true] },
   { label: 'Account manager dédié', values: [false, false, false, true] },
   { label: 'Support',               values: [false, 'Email', 'Prioritaire', '24/7'] },
+  { label: 'Modèle IA',             values: ['JobSpeeder 1.0', 'JobSpeeder 1.0', 'JobSpeeder 2.0', 'JobSpeeder 2.0'], engine: true },
+  { label: 'Extension Chrome LinkedIn', values: [false, false, true, true], linkedin: true },
 ]
 
 const PLANS = [
@@ -148,6 +154,42 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 /* ─── Page ─── */
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false)
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user))
+  }, [])
+
+  async function handleCTAClick(planId: string) {
+    if (planId === 'free') {
+      router.push('/register')
+      return
+    }
+    setLoadingPlan(planId)
+    const billing = annual ? 'annual' : 'monthly'
+
+    if (!isLoggedIn) {
+      router.push(`/register?plan=${planId}&billing=${billing}`)
+      return
+    }
+
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planId, billing }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } finally {
+      setLoadingPlan(null)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#060c16] text-white">
@@ -282,6 +324,43 @@ export default function PricingPage() {
                   <ul className="space-y-2.5 mb-7 flex-1">
                     {FEATURES.map((f, fi) => {
                       const val = f.values[i]
+
+                      if (f.linkedin) {
+                        return (
+                          <li key={fi} className="flex items-center gap-2.5">
+                            <div className="flex-shrink-0 w-4 flex justify-center">
+                              {val
+                                ? <Check size={17} className="text-brand mx-auto" strokeWidth={2.5} />
+                                : <X size={15} className="text-white/20 mx-auto" strokeWidth={2} />}
+                            </div>
+                            <span className={`text-xs leading-tight flex items-center gap-1.5 ${val ? 'text-white/55' : 'text-white/25'}`}>
+                              Extension Chrome LinkedIn
+                              {val
+                                ? <span className="px-1.5 py-0.5 bg-brand/15 border border-brand/30 text-brand text-[10px] font-semibold rounded-full">Beta</span>
+                                : <span className="px-1.5 py-0.5 bg-white/5 border border-white/10 text-white/30 text-[10px] rounded-full">Non inclus</span>}
+                            </span>
+                          </li>
+                        )
+                      }
+
+                      if (f.engine) {
+                        const isPowerful = val === 'JobSpeeder 2.0'
+                        return (
+                          <li key={fi} className="flex items-center gap-2.5">
+                            <div className="flex-shrink-0 w-4 flex justify-center">
+                              <Check size={17} className={isPowerful
+                                ? plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : 'text-white/50'
+                                : 'text-white/20'} strokeWidth={2.5} />
+                            </div>
+                            <span className={`text-xs leading-tight font-medium ${isPowerful
+                              ? plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-300' : 'text-white/70'
+                              : 'text-white/35'}`}>
+                              {isPowerful ? 'JobSpeeder 2.0 — Puissant !' : 'JobSpeeder 1.0'}
+                            </span>
+                          </li>
+                        )
+                      }
+
                       return (
                         <li key={fi} className={`flex items-center gap-2.5 ${f.highlight ? 'py-1 px-2 -mx-2 rounded-lg bg-white/[0.04]' : ''}`}>
                           <div className="flex-shrink-0 w-4 flex justify-center">
@@ -303,9 +382,10 @@ export default function PricingPage() {
                   </ul>
 
                   {/* CTA */}
-                  <Link
-                    href={plan.href}
-                    className={`block text-center py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  <button
+                    onClick={() => handleCTAClick(plan.id)}
+                    disabled={loadingPlan === plan.id}
+                    className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-70 ${
                       plan.featured
                         ? 'bg-brand text-black hover:bg-brand/90 shadow-brand'
                         : plan.elite
@@ -315,8 +395,10 @@ export default function PricingPage() {
                         : 'bg-white/[0.06] border border-white/[0.08] text-white/70 hover:bg-white/[0.1] hover:text-white'
                     }`}
                   >
-                    {plan.cta}
-                  </Link>
+                    {loadingPlan === plan.id
+                      ? <Loader2 size={14} className="animate-spin" />
+                      : plan.cta}
+                  </button>
                 </div>
               </motion.div>
             )

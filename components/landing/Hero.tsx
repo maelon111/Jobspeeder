@@ -13,11 +13,54 @@ const mockApplications = [
 export function Hero() {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 pb-12">
-      {/* Background — layered radial gradients */}
+      {/* Background — animated CSS blobs */}
+      <style>{`
+        @keyframes blobMorph {
+          0%,100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+          25%      { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+          50%      { border-radius: 50% 60% 30% 60% / 30% 60% 70% 40%; }
+          75%      { border-radius: 60% 40% 60% 30% / 70% 30% 50% 60%; }
+        }
+        @keyframes blobDrift1 {
+          0%,100% { transform: translate(0px, 0px); }
+          33%     { transform: translate(50px, -40px); }
+          66%     { transform: translate(-30px, 25px); }
+        }
+        @keyframes blobDrift2 {
+          0%,100% { transform: translate(0px, 0px); }
+          40%     { transform: translate(-40px, 30px); }
+          70%     { transform: translate(30px, -20px); }
+        }
+      `}</style>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-brand/6 rounded-full blur-[120px]" />
-        <div className="absolute top-1/3 left-[-10%] w-[500px] h-[500px] bg-blue-500/4 rounded-full blur-[100px]" />
-        <div className="absolute top-1/3 right-[-10%] w-[500px] h-[500px] bg-purple-500/4 rounded-full blur-[100px]" />
+        {/* Main green blob */}
+        <div style={{
+          position: 'absolute', top: '-80px', left: '15%',
+          width: '550px', height: '450px',
+          background: '#00ff88', filter: 'blur(55px)', opacity: 0.2,
+          animation: 'blobMorph 14s ease-in-out infinite, blobDrift1 22s ease-in-out infinite',
+        }} />
+        {/* Blue blob — left */}
+        <div style={{
+          position: 'absolute', top: '25%', left: '-8%',
+          width: '420px', height: '380px',
+          background: '#3b82f6', filter: 'blur(50px)', opacity: 0.14,
+          animation: 'blobMorph 18s ease-in-out infinite 2s, blobDrift2 26s ease-in-out infinite 1s',
+        }} />
+        {/* Purple blob — right */}
+        <div style={{
+          position: 'absolute', top: '20%', right: '-5%',
+          width: '400px', height: '460px',
+          background: '#a855f7', filter: 'blur(50px)', opacity: 0.12,
+          animation: 'blobMorph 20s ease-in-out infinite 4s',
+        }} />
+        {/* Secondary green blob — bottom center */}
+        <div style={{
+          position: 'absolute', bottom: '10%', right: '25%',
+          width: '300px', height: '260px',
+          background: '#00ff88', filter: 'blur(45px)', opacity: 0.1,
+          animation: 'blobMorph 16s ease-in-out infinite 7s, blobDrift1 28s ease-in-out infinite 3s',
+        }} />
       </div>
 
       {/* Subtle dot grid */}

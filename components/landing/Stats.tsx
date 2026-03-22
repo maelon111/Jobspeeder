@@ -69,8 +69,11 @@ function AnimatedCounter({ value, suffix, color }: { value: number; suffix: stri
 
 export function Stats() {
   return (
-    <section className="py-16 px-4">
-      <div className="max-w-5xl mx-auto">
+    <section className="relative py-16 px-4 overflow-hidden">
+      {/* Section blob */}
+      <div className="blob-drift-2 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] pointer-events-none"
+        style={{ background: '#00ff88', filter: 'blur(70px)', opacity: 0.08 }} />
+      <div className="max-w-5xl mx-auto relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

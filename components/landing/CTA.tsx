@@ -22,9 +22,13 @@ export function CTA() {
             className="relative rounded-3xl p-10 md:p-14 text-center overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #0a1525 0%, #060c16 100%)' }}
           >
-            {/* Glow orb */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-40 bg-brand/15 blur-[60px] pointer-events-none" />
-            <div className="absolute bottom-0 right-0 w-60 h-40 bg-purple-500/8 blur-[60px] pointer-events-none" />
+            {/* Animated blobs */}
+            <div className="blob absolute -top-8 left-1/2 -translate-x-1/2 w-80 h-56 pointer-events-none"
+              style={{ background: '#00ff88', filter: 'blur(50px)', opacity: 0.2, animationDuration: '12s' }} />
+            <div className="blob-slow absolute bottom-0 right-0 w-64 h-56 pointer-events-none"
+              style={{ background: '#a855f7', filter: 'blur(45px)', opacity: 0.15, animationDelay: '4s' }} />
+            <div className="blob absolute top-1/2 left-[-5%] w-44 h-44 pointer-events-none"
+              style={{ background: '#3b82f6', filter: 'blur(40px)', opacity: 0.1, animationDelay: '7s', animationDuration: '18s' }} />
 
             {/* Icon */}
             <div className="relative z-10">
