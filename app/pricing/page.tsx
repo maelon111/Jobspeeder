@@ -367,7 +367,7 @@ export default function PricingPage() {
                           <div className="flex-shrink-0 w-4 flex justify-center">
                             <FeatureValue val={val} />
                           </div>
-                          <span className={`text-xs leading-tight ${
+                          <span className={`text-xs leading-tight flex items-center gap-1.5 flex-wrap ${
                             val === false ? 'text-white/25 line-through' : f.highlight ? 'text-white/90 font-semibold' : 'text-white/55'
                           }`}>
                             {f.highlight && typeof val === 'number'
@@ -375,7 +375,11 @@ export default function PricingPage() {
                               : f.label
                             }
                             {!f.highlight && typeof val === 'number' && ` : ${val}`}
-                            {!f.highlight && typeof val === 'string' && ` ${val.toLowerCase()}`}
+                            {!f.highlight && typeof val === 'string' && (
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                                plan.featured ? 'bg-brand/15 text-brand' : plan.elite ? 'bg-yellow-500/10 text-yellow-400' : plan.gold ? 'bg-blue-400/10 text-blue-400' : 'bg-white/[0.06] text-white/40'
+                              }`}>{val}</span>
+                            )}
                           </span>
                         </li>
                       )
