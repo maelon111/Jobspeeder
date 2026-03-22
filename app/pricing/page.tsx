@@ -28,7 +28,7 @@ const FEATURES: Feature[] = [
   { label: 'Relances automatiques',  values: [false, false, true, true] },
   { label: 'Account manager dédié', values: [false, false, false, true] },
   { label: 'Support',               values: [false, 'Email', 'Prioritaire', '24/7'] },
-  { label: 'Modèle IA',             values: ['JobSpeeder 1.0', 'JobSpeeder 1.0', 'JobSpeeder 2.0', 'JobSpeeder 2.0'], engine: true },
+  { label: 'Modèle IA',             values: ['JobSpeeder 1.0', 'JobSpeeder 1.0', 'JobSpeeder 2.0', 'JobSpeeder 3.0'], engine: true },
   { label: 'Extension Chrome LinkedIn', values: [false, false, true, true], linkedin: true },
 ]
 
@@ -354,18 +354,21 @@ export default function PricingPage() {
                       }
 
                       if (f.engine) {
-                        const isPowerful = val === 'JobSpeeder 2.0'
+                        const isV2 = val === 'JobSpeeder 2.0'
+                        const isV3 = val === 'JobSpeeder 3.0'
+                        const isUpgraded = isV2 || isV3
+                        const label = isV3 ? 'JobSpeeder 3.0 — Ultra puissant !!' : isV2 ? 'JobSpeeder 2.0 — Puissant !' : 'JobSpeeder 1.0'
                         return (
                           <li key={fi} className="flex items-center gap-2.5">
                             <div className="flex-shrink-0 w-4 flex justify-center">
-                              <Check size={17} className={isPowerful
+                              <Check size={17} className={isUpgraded
                                 ? plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : 'text-white/50'
                                 : 'text-white/20'} strokeWidth={2.5} />
                             </div>
-                            <span className={`text-xs leading-tight font-medium ${isPowerful
+                            <span className={`text-xs leading-tight font-medium ${isUpgraded
                               ? plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-300' : 'text-white/70'
                               : 'text-white/35'}`}>
-                              <span className="text-white/30 font-normal">Modèle IA : </span>{isPowerful ? 'JobSpeeder 2.0 — Puissant !' : 'JobSpeeder 1.0'}
+                              <span className="text-white/30 font-normal">Modèle IA : </span>{label}
                             </span>
                           </li>
                         )
