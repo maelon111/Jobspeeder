@@ -365,7 +365,7 @@ export default function PricingPage() {
                             <span className={`text-xs leading-tight font-medium ${isPowerful
                               ? plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-300' : 'text-white/70'
                               : 'text-white/35'}`}>
-                              {isPowerful ? 'JobSpeeder 2.0 — Puissant !' : 'JobSpeeder 1.0'}
+                              <span className="text-white/30 font-normal">Modèle IA : </span>{isPowerful ? 'JobSpeeder 2.0 — Puissant !' : 'JobSpeeder 1.0'}
                             </span>
                           </li>
                         )
