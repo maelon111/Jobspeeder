@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Zap, Check, X, Shield, ChevronDown, Star,
-  Users, Crown, Sparkles, Loader2
+  Users, Crown, Sparkles, Loader2, Linkedin
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -334,7 +334,8 @@ export default function PricingPage() {
                                 : <X size={15} className="text-white/20 mx-auto" strokeWidth={2} />}
                             </div>
                             <span className={`text-xs leading-tight flex items-center gap-1.5 ${val ? 'text-white/55' : 'text-white/25'}`}>
-                              Extension Chrome LinkedIn
+                              <Linkedin size={13} className={val ? 'text-[#0A66C2] flex-shrink-0' : 'text-white/20 flex-shrink-0'} fill={val ? '#0A66C2' : 'currentColor'} />
+                              Extension Chrome
                               {val
                                 ? <span className="px-1.5 py-0.5 bg-brand/15 border border-brand/30 text-brand text-[10px] font-semibold rounded-full">Beta</span>
                                 : <span className="px-1.5 py-0.5 bg-white/5 border border-white/10 text-white/30 text-[10px] rounded-full">Non inclus</span>}
