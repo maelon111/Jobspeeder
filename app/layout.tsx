@@ -61,10 +61,18 @@ export const metadata: Metadata = {
     title: 'JobSpeeder',
   },
   openGraph: {
-    title: 'JobSpeeder — Apply to 100 Jobs While You Sleep',
-    description: 'AI-powered job application automation platform',
+    title: 'JobSpeeder — Postulez à 100 offres pendant que vous dormez',
+    description: "Candidatures automatiques par IA. CV optimisé, lettre personnalisée, envoi automatique.",
     type: 'website',
-    images: [{ url: '/logo-v2.png' }],
+    url: SITE_URL,
+    siteName: 'JobSpeeder',
+    images: [{ url: `${SITE_URL}/opengraph-image`, width: 1200, height: 630, alt: 'JobSpeeder' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'JobSpeeder — Postulez à 100 offres pendant que vous dormez',
+    description: "Candidatures automatiques par IA.",
+    images: [`${SITE_URL}/opengraph-image`],
   },
 }
 
