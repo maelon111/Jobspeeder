@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/Button'
 import { Zap, Briefcase, TrendingUp, Clock, Star, ArrowRight, FileText, Settings } from 'lucide-react'
 import Link from 'next/link'
 import type { Profile, JobPreferences } from '@/types/supabase'
+import { useLanguage } from '@/lib/i18n'
+import { useT } from '@/lib/translations'
 
 type JobOffer = {
   titre: string
@@ -15,6 +17,10 @@ type JobOffer = {
 }
 
 export default function DashboardPage() {
+  const { lang } = useLanguage()
+  const tr = useT(lang)
+  const d = tr.app.dashboard
+
   const [profile, setProfile] = useState<Profile | null>(null)
   const [total, setTotal] = useState(0)
   const [recent, setRecent] = useState<JobOffer[]>([])
@@ -49,7 +55,7 @@ export default function DashboardPage() {
 
   const statCards = [
     {
-      label: 'Candidatures',
+      label: d.statApplications,
       value: total,
       icon: Briefcase,
       color: 'text-blue-400',
@@ -58,7 +64,7 @@ export default function DashboardPage() {
       glow: 'shadow-[0_0_20px_rgba(59,130,246,0.08)]',
     },
     {
-      label: 'Envoyées',
+      label: d.statSent,
       value: total,
       icon: Star,
       color: 'text-brand',
@@ -67,7 +73,7 @@ export default function DashboardPage() {
       glow: 'shadow-[0_0_20px_rgba(0,255,136,0.08)]',
     },
     {
-      label: 'En traitement',
+      label: d.statProcessing,
       value: total,
       icon: Clock,
       color: 'text-yellow-400',
@@ -76,7 +82,7 @@ export default function DashboardPage() {
       glow: 'shadow-[0_0_20px_rgba(234,179,8,0.08)]',
     },
     {
-      label: 'Taux succès',
+      label: d.statRate,
       value: '—',
       icon: TrendingUp,
       color: 'text-purple-400',
@@ -91,7 +97,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-center h-full min-h-screen">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 rounded-full border-2 border-brand/30 border-t-brand animate-spin" />
-          <span className="text-white/30 text-sm">Chargement...</span>
+          <span className="text-white/30 text-sm">{tr.app.loading}</span>
         </div>
       </div>
     )
@@ -114,18 +120,18 @@ export default function DashboardPage() {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-black text-white">
-              Bonjour{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''} 👋
+              {d.hello}{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''} 👋
             </h1>
             <p className="text-white/35 mt-1 text-sm">
               {prefs?.job_title
-                ? `Automatisation active · "${prefs.job_title}"`
-                : 'Configurez vos préférences pour démarrer'}
+                ? `${d.automationActive}"${prefs.job_title}"`
+                : d.configurePrefs}
             </p>
           </div>
           {prefs?.is_active && (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-brand/8 border border-brand/20 rounded-full text-xs text-brand font-medium">
               <div className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
-              Actif
+              {d.active}
             </div>
           )}
         </div>
@@ -162,10 +168,10 @@ export default function DashboardPage() {
           className="lg:col-span-2 glass rounded-2xl overflow-hidden border border-white/[0.06]"
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
-            <h2 className="font-semibold text-sm text-white">Candidatures récentes</h2>
+            <h2 className="font-semibold text-sm text-white">{d.recentApps}</h2>
             <Link href="/applications">
               <Button variant="ghost" size="sm">
-                Voir tout <ArrowRight size={13} />
+                {d.viewAll} <ArrowRight size={13} />
               </Button>
             </Link>
           </div>
@@ -175,8 +181,8 @@ export default function DashboardPage() {
               <div className="p-4 bg-white/[0.04] rounded-2xl inline-flex mb-4">
                 <Briefcase size={28} className="text-white/15" />
               </div>
-              <p className="text-white/30 text-sm font-medium">Aucune candidature pour le moment</p>
-              <p className="text-white/18 text-xs mt-1.5">L&apos;automatisation enverra des candidatures dès que configurée</p>
+              <p className="text-white/30 text-sm font-medium">{d.noApplications}</p>
+              <p className="text-white/18 text-xs mt-1.5">{d.noAppsHint}</p>
             </div>
           ) : (
             <div className="divide-y divide-white/[0.04]">
@@ -194,11 +200,11 @@ export default function DashboardPage() {
                     <span className="font-medium text-sm text-white/90 truncate block">{job.titre}</span>
                     <div className="text-xs text-white/35 mt-0.5">
                       {job.entreprise_nom || '—'}
-                      {job.date && ` · ${new Date(job.date).toLocaleDateString('fr-FR')}`}
+                      {job.date && ` · ${new Date(job.date).toLocaleDateString()}`}
                     </div>
                   </div>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/15 text-blue-400 border border-blue-500/20 flex-shrink-0">
-                    Envoyée
+                    {d.sent}
                   </span>
                 </div>
               ))}
@@ -215,19 +221,19 @@ export default function DashboardPage() {
         >
           {/* Automation status */}
           <div className="glass rounded-2xl p-5 border border-white/[0.06]">
-            <h2 className="font-semibold text-sm text-white mb-3">Automatisation</h2>
+            <h2 className="font-semibold text-sm text-white mb-3">{d.automation}</h2>
             <div className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl mb-3">
               <div className={`w-2 h-2 rounded-full flex-shrink-0 ${prefs?.is_active ? 'bg-brand animate-pulse' : 'bg-white/15'}`} />
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-white/80">{prefs?.is_active ? 'Active' : 'Inactive'}</div>
+                <div className="text-sm font-medium text-white/80">{prefs?.is_active ? d.automActive : d.automInactive}</div>
                 <div className="text-xs text-white/35">
-                  {prefs?.n8n_webhook_url ? 'Webhook configuré' : 'Webhook non configuré'}
+                  {prefs?.n8n_webhook_url ? d.webhookOk : d.webhookNok}
                 </div>
               </div>
             </div>
             {prefs?.job_title && (
               <div className="p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl mb-3">
-                <div className="text-[10px] text-white/35 uppercase tracking-wide font-semibold mb-1">Poste recherché</div>
+                <div className="text-[10px] text-white/35 uppercase tracking-wide font-semibold mb-1">{d.jobSought}</div>
                 <div className="text-sm font-medium text-white/80">{prefs.job_title}</div>
                 {prefs.location && <div className="text-xs text-white/35 mt-0.5">{prefs.location}</div>}
               </div>
@@ -235,26 +241,26 @@ export default function DashboardPage() {
             <Link href="/settings" className="block">
               <Button variant="secondary" size="sm" className="w-full">
                 <Settings size={13} />
-                Configurer
+                {d.configure}
               </Button>
             </Link>
           </div>
 
           {/* Quick links */}
           <div className="glass rounded-2xl p-5 border border-white/[0.06]">
-            <h2 className="font-semibold text-sm text-white mb-3">Actions rapides</h2>
+            <h2 className="font-semibold text-sm text-white mb-3">{d.quickActions}</h2>
             <div className="space-y-1.5">
               <Link href="/cv">
                 <button className="flex items-center gap-3 w-full px-3 py-2.5 bg-white/[0.03] border border-white/[0.05] rounded-xl hover:bg-white/[0.06] hover:border-white/10 transition-all duration-150 text-sm text-left">
                   <FileText size={15} className="text-blue-400 flex-shrink-0" />
-                  <span className="text-white/70 font-medium">Gérer mes CVs</span>
+                  <span className="text-white/70 font-medium">{d.manageCvs}</span>
                   <ArrowRight size={13} className="ml-auto text-white/25" />
                 </button>
               </Link>
               <Link href="/applications">
                 <button className="flex items-center gap-3 w-full px-3 py-2.5 bg-white/[0.03] border border-white/[0.05] rounded-xl hover:bg-white/[0.06] hover:border-white/10 transition-all duration-150 text-sm text-left">
                   <Briefcase size={15} className="text-yellow-400 flex-shrink-0" />
-                  <span className="text-white/70 font-medium">Toutes les candidatures</span>
+                  <span className="text-white/70 font-medium">{d.allApplications}</span>
                   <ArrowRight size={13} className="ml-auto text-white/25" />
                 </button>
               </Link>
@@ -265,10 +271,10 @@ export default function DashboardPage() {
           <div className="rounded-2xl p-4 bg-brand/[0.04] border border-brand/[0.12]">
             <div className="flex items-center gap-2 mb-2">
               <Zap size={13} className="text-brand fill-current" />
-              <span className="text-[11px] font-bold text-brand uppercase tracking-wide">Conseil</span>
+              <span className="text-[11px] font-bold text-brand uppercase tracking-wide">{d.tip}</span>
             </div>
             <p className="text-xs text-white/45 leading-relaxed">
-              Activez votre webhook n8n dans les paramètres pour déclencher l&apos;automatisation des candidatures.
+              {d.tipText}
             </p>
           </div>
         </motion.div>

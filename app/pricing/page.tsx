@@ -9,110 +9,48 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { JsonLd } from '@/components/JsonLd'
+import { useLanguage } from '@/lib/i18n'
+import { useT } from '@/lib/translations'
 
 const SITE_URL = 'https://jobspeeder.online'
 
-/* ─── Data ─── */
-type Feature = {
-  label: string
-  values: (string | boolean | number)[]
-  highlight?: boolean
-  engine?: boolean
-  linkedin?: boolean
+/* ─── Static Structured Data (French, for SEO) ─── */
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    { '@type': 'Question', name: 'Puis-je changer de forfait à tout moment ?', acceptedAnswer: { '@type': 'Answer', text: "Oui, vous pouvez passer à un forfait supérieur ou inférieur à tout moment depuis votre espace personnel." } },
+    { '@type': 'Question', name: "Qu'est-ce qu'un profil CV ?", acceptedAnswer: { '@type': 'Answer', text: "Un profil CV correspond à un ensemble de données utilisé pour personnaliser vos candidatures." } },
+    { '@type': 'Question', name: 'Comment fonctionne la garantie 7 jours ?', acceptedAnswer: { '@type': 'Answer', text: "Si vous n'êtes pas satisfait dans les 7 jours, nous vous remboursons, sous condition." } },
+    { '@type': 'Question', name: 'Les candidatures sont-elles vraiment automatiques ?', acceptedAnswer: { '@type': 'Answer', text: "Oui. JobSpeeder utilise une technologie d'IA avancée pour postuler en votre nom." } },
+    { '@type': 'Question', name: 'Quelle est la différence entre le support email et le support prioritaire ?', acceptedAnswer: { '@type': 'Answer', text: "Le support email répond sous 48h ouvrées. Le support prioritaire (Platinum) répond sous 4h." } },
+  ],
 }
 
-const FEATURES: Feature[] = [
-  { label: 'Candidatures / jour',    values: [3, 10, 25, 50] },
-  { label: 'Candidatures / mois',    values: [20, 150, 500, 1500] },
-  { label: 'Offres proposées / jour', values: [10, 50, 200, 500] },
-  { label: 'Profils CV',             values: [1, 2, 5, 15], highlight: true },
-  { label: 'Suivi des candidatures', values: [true, true, true, true] },
-  { label: 'Personnalisation email', values: ['Basique', 'Avancée', 'Avancée', 'Avancée'] },
-  { label: 'Relances automatiques',  values: [false, false, true, true] },
-  { label: 'Account manager dédié', values: [false, false, false, true] },
-  { label: 'Support',               values: [false, 'Email', 'Prioritaire', '24/7'] },
-  { label: 'Modèle IA',             values: ['JobSpeeder 1.0', 'JobSpeeder 1.0', 'JobSpeeder 2.0', 'JobSpeeder 3.0'], engine: true },
-  { label: 'Extension Chrome LinkedIn', values: [false, false, true, true], linkedin: true },
-]
+const pricingAppSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'JobSpeeder',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  url: SITE_URL,
+  description: "Automatisez vos candidatures d'emploi grâce à l'IA.",
+  offers: [
+    { '@type': 'Offer', name: 'FREE', price: '0', priceCurrency: 'EUR' },
+    { '@type': 'Offer', name: 'GOLD', price: '29', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: 29, priceCurrency: 'EUR', billingDuration: 'P1M' } },
+    { '@type': 'Offer', name: 'PLATINUM', price: '59', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: 59, priceCurrency: 'EUR', billingDuration: 'P1M' } },
+    { '@type': 'Offer', name: 'ELITE', price: '149', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: 149, priceCurrency: 'EUR', billingDuration: 'P1M' } },
+  ],
+}
 
-const PLANS = [
-  {
-    id: 'free',
-    name: 'FREE',
-    tagline: 'Pour tester JobSpeeder',
-    monthly: 0,
-    annualMonthly: 0,
-    cta: 'Commencer gratuitement',
-    href: '/register',
-    featured: false,
-    elite: false,
-    gold: false,
-    icon: Zap,
-  },
-  {
-    id: 'gold',
-    name: 'GOLD',
-    tagline: 'Pour une recherche active',
-    monthly: 29,
-    annualMonthly: 23,
-    cta: 'Choisir Gold',
-    href: '/register',
-    featured: false,
-    elite: false,
-    gold: true,
-    icon: Star,
-  },
-  {
-    id: 'platinum',
-    gold: false,
-    name: 'PLATINUM',
-    tagline: 'Pour maximiser vos chances',
-    monthly: 59,
-    annualMonthly: 47,
-    cta: 'Choisir Platinum',
-    href: '/register',
-    featured: true,
-    elite: false,
-    badge: 'Le plus populaire',
-    icon: Sparkles,
-  },
-  {
-    id: 'elite',
-    name: 'ELITE',
-    tagline: 'Pour les profils exigeants',
-    monthly: 149,
-    annualMonthly: 119,
-    cta: 'Choisir Elite',
-    href: '/register',
-    featured: false,
-    elite: true,
-    gold: false,
-    icon: Crown,
-  },
-]
-
-const FAQS = [
-  {
-    q: 'Puis-je changer de forfait à tout moment ?',
-    a: "Oui, vous pouvez passer à un forfait supérieur ou inférieur à tout moment depuis votre espace personnel. Le changement prend effet immédiatement et la facturation est ajustée au prorata.",
-  },
-  {
-    q: 'Qu\'est-ce qu\'un profil CV ?',
-    a: "Un profil CV correspond à un ensemble de données (CV, préférences, compétences) utilisé pour personnaliser vos candidatures. Plus vous avez de profils, plus vous pouvez cibler des types de postes différents simultanément.",
-  },
-  {
-    q: 'Comment fonctionne la garantie 14 jours ?',
-    a: "Si vous n'êtes pas satisfait dans les 7 jours suivant votre premier abonnement payant, nous vous remboursons, sous condition. Contactez simplement notre support.",
-  },
-  {
-    q: 'Les candidatures sont-elles vraiment automatiques ?',
-    a: "Oui. JobSpeeder utilise une technologie d'IA avancée pour postuler en votre nom sur les offres correspondant à vos critères, personnalisant chaque candidature avec votre profil CV.",
-  },
-  {
-    q: 'Quelle est la différence entre le support email et le support prioritaire ?',
-    a: "Le support email répond sous 48h ouvrées. Le support prioritaire (Platinum) répond sous 4h. Le plan Elite inclut un account manager dédié et un support 24/7 par chat et téléphone.",
-  },
-]
+const pricingBreadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Accueil', item: SITE_URL },
+    { '@type': 'ListItem', position: 2, name: 'Tarifs', item: `${SITE_URL}/pricing` },
+  ],
+}
 
 /* ─── Sub-components ─── */
 function FeatureValue({ val }: { val: string | boolean | number }) {
@@ -165,63 +103,15 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   )
 }
 
-/* ─── Structured Data ─── */
-const faqSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: FAQS.map(({ q, a }) => ({
-    '@type': 'Question',
-    name: q,
-    acceptedAnswer: {
-      '@type': 'Answer',
-      text: a,
-    },
-  })),
-}
-
-const pricingAppSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'JobSpeeder',
-  applicationCategory: 'BusinessApplication',
-  operatingSystem: 'Web',
-  url: SITE_URL,
-  description:
-    "Automatisez vos candidatures d'emploi grâce à l'IA. Notre bot postule à 100 offres pendant votre sommeil.",
-  offers: PLANS.map((plan) => ({
-    '@type': 'Offer',
-    name: plan.name,
-    price: String(plan.monthly),
-    priceCurrency: 'EUR',
-    description: plan.tagline,
-    url: `${SITE_URL}/pricing`,
-    ...(plan.monthly > 0 && {
-      priceSpecification: {
-        '@type': 'UnitPriceSpecification',
-        price: plan.monthly,
-        priceCurrency: 'EUR',
-        billingDuration: 'P1M',
-        billingIncrement: 1,
-      },
-    }),
-  })),
-}
-
-const pricingBreadcrumbSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Accueil', item: SITE_URL },
-    { '@type': 'ListItem', position: 2, name: 'Tarifs', item: `${SITE_URL}/pricing` },
-  ],
-}
-
 /* ─── Page ─── */
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false)
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const router = useRouter()
+  const { lang } = useLanguage()
+  const tr = useT(lang)
+  const p = tr.pricing
 
   useEffect(() => {
     const supabase = createClient()
@@ -256,11 +146,34 @@ export default function PricingPage() {
     }
   }
 
+  const PLANS = [
+    { id: 'free',     name: 'FREE',     tagline: p.plans.free.tagline,     cta: p.plans.free.cta,     monthly: 0,   annualMonthly: 0,   featured: false, elite: false, gold: false, icon: Zap },
+    { id: 'gold',     name: 'GOLD',     tagline: p.plans.gold.tagline,     cta: p.plans.gold.cta,     monthly: 29,  annualMonthly: 23,  featured: false, elite: false, gold: true,  icon: Star },
+    { id: 'platinum', name: 'PLATINUM', tagline: p.plans.platinum.tagline, cta: p.plans.platinum.cta, monthly: 59,  annualMonthly: 47,  featured: true,  elite: false, gold: false, icon: Sparkles, badge: p.popular },
+    { id: 'elite',    name: 'ELITE',    tagline: p.plans.elite.tagline,    cta: p.plans.elite.cta,    monthly: 149, annualMonthly: 119, featured: false, elite: true,  gold: false, icon: Crown },
+  ]
+
+  const f = p.features
+  const FEATURES = [
+    { label: f.appsPerDay,     values: [3, 10, 25, 50] },
+    { label: f.appsPerMonth,   values: [20, 150, 500, 1500] },
+    { label: f.offersPerDay,   values: [10, 50, 200, 500] },
+    { label: f.cvProfiles,     values: [1, 2, 5, 15], highlight: true },
+    { label: f.tracking,       values: [true, true, true, true] },
+    { label: f.emailCustom,    values: [f.basic, f.advanced, f.advanced, f.advanced] },
+    { label: f.followUp,       values: [false, false, true, true] },
+    { label: f.accountManager, values: [false, false, false, true] },
+    { label: f.support,        values: [false, 'Email', f.priority, '24/7'] },
+    { label: f.aiModel,        values: ['JobSpeeder 1.0', 'JobSpeeder 1.0', 'JobSpeeder 2.0', 'JobSpeeder 3.0'], engine: true },
+    { label: f.linkedinExt,    values: [false, false, true, true], linkedin: true },
+  ]
+
   return (
     <div className="min-h-screen bg-[#060c16] text-white">
       <JsonLd data={faqSchema} />
       <JsonLd data={pricingAppSchema} />
       <JsonLd data={pricingBreadcrumbSchema} />
+
       {/* Ambient */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-brand/5 rounded-full blur-[120px]" />
@@ -277,9 +190,9 @@ export default function PricingPage() {
           <span className="text-white text-sm">JobSpeeder</span>
         </Link>
         <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm text-white/40 hover:text-white/80 transition-colors">Se connecter</Link>
+          <Link href="/login" className="text-sm text-white/40 hover:text-white/80 transition-colors">{p.nav.login}</Link>
           <Link href="/register" className="text-sm px-4 py-2 bg-brand text-black font-semibold rounded-xl hover:bg-brand/90 transition-colors">
-            Essayer gratuitement
+            {p.nav.register}
           </Link>
         </div>
       </nav>
@@ -290,20 +203,20 @@ export default function PricingPage() {
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-brand/10 border border-brand/20 rounded-full text-xs text-brand font-medium mb-5">
             <Zap size={11} />
-            Tarifs simples et transparents
+            {p.badge}
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Trouvez votre emploi{' '}
-            <span className="text-brand">10x plus vite</span>
+            {p.headline}{' '}
+            <span className="text-brand">{p.headlineHighlight}</span>
           </h1>
           <p className="text-white/45 text-lg max-w-xl mx-auto">
-            Choisissez le forfait adapté à votre recherche d&apos;emploi. Changez ou annulez à tout moment.
+            {p.sub}
           </p>
         </motion.div>
 
         {/* Toggle annuel/mensuel */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="flex items-center justify-center gap-4 mb-12">
-          <span className={`text-sm font-medium transition-colors ${!annual ? 'text-white' : 'text-white/35'}`}>Mensuel</span>
+          <span className={`text-sm font-medium transition-colors ${!annual ? 'text-white' : 'text-white/35'}`}>{p.monthly}</span>
           <button
             onClick={() => setAnnual(!annual)}
             className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${annual ? 'bg-brand' : 'bg-white/10'}`}
@@ -311,7 +224,7 @@ export default function PricingPage() {
             <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${annual ? 'left-7' : 'left-1'}`} />
           </button>
           <div className="flex items-center gap-2">
-            <span className={`text-sm font-medium transition-colors ${annual ? 'text-white' : 'text-white/35'}`}>Annuel</span>
+            <span className={`text-sm font-medium transition-colors ${annual ? 'text-white' : 'text-white/35'}`}>{p.annual}</span>
             <span className="text-xs px-2 py-0.5 bg-brand/15 border border-brand/25 text-brand rounded-full font-semibold">-20%</span>
           </div>
         </motion.div>
@@ -346,11 +259,9 @@ export default function PricingPage() {
                   </div>
                 )}
 
-                {/* Elite top border */}
                 {plan.elite && (
                   <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-500/60 to-transparent rounded-t-2xl" />
                 )}
-                {/* Gold top border */}
                 {plan.gold && (
                   <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent rounded-t-2xl" />
                 )}
@@ -375,25 +286,29 @@ export default function PricingPage() {
                   <div className="mb-6">
                     <div className="flex items-end gap-1">
                       <span className="text-4xl font-bold">{price}</span>
-                      <span className="text-white/40 mb-1.5 text-sm">€/mois</span>
+                      <span className="text-white/40 mb-1.5 text-sm">{p.perMonth}</span>
                     </div>
                     {annual && plan.monthly > 0 && (
                       <p className="text-xs text-white/30 mt-1">
-                        soit {annualTotal}€/an · économisez {(plan.monthly - plan.annualMonthly) * 12}€
+                        {p.annualSave
+                          .replace('{total}', String(annualTotal))
+                          .replace('{save}', String((plan.monthly - plan.annualMonthly) * 12))}
                       </p>
                     )}
                     {!annual && plan.monthly > 0 && (
-                      <p className="text-xs text-white/25 mt-1">ou {plan.annualMonthly}€/mois en annuel</p>
+                      <p className="text-xs text-white/25 mt-1">
+                        {p.orAnnual.replace('{price}', String(plan.annualMonthly))}
+                      </p>
                     )}
-                    {plan.monthly === 0 && <p className="text-xs text-white/25 mt-1">pour toujours</p>}
+                    {plan.monthly === 0 && <p className="text-xs text-white/25 mt-1">{p.forever}</p>}
                   </div>
 
                   {/* Features */}
                   <ul className="space-y-2.5 mb-7 flex-1">
-                    {FEATURES.map((f, fi) => {
-                      const val = f.values[i]
+                    {FEATURES.map((feat, fi) => {
+                      const val = feat.values[i]
 
-                      if (f.linkedin) {
+                      if (feat.linkedin) {
                         return (
                           <li key={fi} className="flex items-center gap-2.5">
                             <div className="flex-shrink-0 w-4 flex justify-center">
@@ -403,18 +318,18 @@ export default function PricingPage() {
                             </div>
                             <span className={`text-xs leading-tight flex items-center gap-1.5 ${val ? 'text-white/55' : 'text-white/25'}`}>
                               <LinkedInLogo active={!!val} />
-                              {val ? 'Extension Chrome LinkedIn (Beta)' : 'Extension Chrome LinkedIn'}
-                              {!val && <span className="px-1.5 py-0.5 bg-white/5 border border-white/10 text-white/30 text-[10px] rounded-full">Non inclus</span>}
+                              {val ? f.linkedinBeta : f.linkedinExt}
+                              {!val && <span className="px-1.5 py-0.5 bg-white/5 border border-white/10 text-white/30 text-[10px] rounded-full">{f.notIncluded}</span>}
                             </span>
                           </li>
                         )
                       }
 
-                      if (f.engine) {
+                      if (feat.engine) {
                         const isV2 = val === 'JobSpeeder 2.0'
                         const isV3 = val === 'JobSpeeder 3.0'
                         const isUpgraded = isV2 || isV3
-                        const label = isV3 ? 'JobSpeeder 3.0 — Ultra puissant !!' : isV2 ? 'JobSpeeder 2.0 — Puissant !' : 'JobSpeeder 1.0'
+                        const label = isV3 ? f.aiV3 : isV2 ? f.aiV2 : 'JobSpeeder 1.0'
                         return (
                           <li key={fi} className="flex items-center gap-2.5">
                             <div className="flex-shrink-0 w-4 flex justify-center">
@@ -425,25 +340,25 @@ export default function PricingPage() {
                             <span className={`text-xs leading-tight font-medium ${isUpgraded
                               ? plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-300' : 'text-white/70'
                               : 'text-white/35'}`}>
-                              <span className="text-white/30 font-normal">Modèle IA : </span>{label}
+                              <span className="text-white/30 font-normal">{f.aiModelPrefix}</span>{label}
                             </span>
                           </li>
                         )
                       }
 
                       return (
-                        <li key={fi} className={`flex items-center gap-2.5 ${f.highlight ? 'py-1 px-2 -mx-2 rounded-lg bg-white/[0.04]' : ''}`}>
+                        <li key={fi} className={`flex items-center gap-2.5 ${feat.highlight ? 'py-1 px-2 -mx-2 rounded-lg bg-white/[0.04]' : ''}`}>
                           <div className="flex-shrink-0 w-4 flex justify-center">
                             <FeatureValue val={val} />
                           </div>
                           <span className={`text-xs leading-tight ${
-                            val === false ? 'text-white/25 line-through' : f.highlight ? 'text-white/90 font-semibold' : 'text-white/55'
+                            val === false ? 'text-white/25 line-through' : feat.highlight ? 'text-white/90 font-semibold' : 'text-white/55'
                           }`}>
-                            {f.highlight && typeof val === 'number'
-                              ? <><span className={`font-bold text-sm ${plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : plan.gold ? 'text-blue-400' : 'text-white/80'}`}>{val}</span> profil{(val as number) > 1 ? 's' : ''} CV</>
-                              : f.label
+                            {feat.highlight && typeof val === 'number'
+                              ? <><span className={`font-bold text-sm ${plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : plan.gold ? 'text-blue-400' : 'text-white/80'}`}>{val}</span> {(val as number) > 1 ? f.cvProfiles2 : f.cvProfile}</>
+                              : feat.label
                             }
-                            {!f.highlight && typeof val === 'number' && ` : ${val}`}
+                            {!feat.highlight && typeof val === 'number' && ` : ${val}`}
                           </span>
                         </li>
                       )
@@ -485,14 +400,12 @@ export default function PricingPage() {
             <Shield size={28} className="text-brand" />
           </div>
           <div className="text-center sm:text-left">
-            <div className="font-semibold text-white mb-1">Satisfait ou remboursé — 7 jours</div>
-            <p className="text-sm text-white/40">
-              Pas convaincu dans les 7 jours ? Nous vous remboursons, sous condition.
-            </p>
+            <div className="font-semibold text-white mb-1">{p.guarantee.title}</div>
+            <p className="text-sm text-white/40">{p.guarantee.sub}</p>
           </div>
         </motion.div>
 
-        {/* Nombre de profils — focus section */}
+        {/* Nombre de profils */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -500,33 +413,34 @@ export default function PricingPage() {
           className="mb-20"
         >
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-2">Pourquoi les profils CV font la différence</h2>
-            <p className="text-white/40 text-sm max-w-lg mx-auto">
-              Chaque profil CV cible un type de poste précis. Plus vous en avez, plus vos candidatures sont personnalisées et percutantes.
-            </p>
+            <h2 className="text-2xl font-bold mb-2">{p.profiles.title}</h2>
+            <p className="text-white/40 text-sm max-w-lg mx-auto">{p.profiles.sub}</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {PLANS.map((plan, i) => (
-              <div
-                key={plan.id}
-                className={`rounded-2xl p-5 text-center ${
-                  plan.featured
-                    ? 'bg-brand/10 border border-brand/25'
-                    : plan.elite
-                    ? 'bg-yellow-500/5 border border-yellow-500/20'
-                    : plan.gold
-                    ? 'bg-blue-500/5 border border-blue-400/20'
-                    : 'bg-white/[0.02] border border-white/[0.06]'
-                }`}
-              >
-                <Users size={20} className={`mx-auto mb-2 ${plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : plan.gold ? 'text-blue-400' : 'text-white/30'}`} />
-                <div className={`text-3xl font-bold mb-1 ${plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : plan.gold ? 'text-blue-400' : 'text-white/70'}`}>
-                  {FEATURES.find(f => f.highlight)?.values[i]}
+            {PLANS.map((plan, i) => {
+              const cvCount = FEATURES.find(f => f.highlight)?.values[i] as number
+              return (
+                <div
+                  key={plan.id}
+                  className={`rounded-2xl p-5 text-center ${
+                    plan.featured
+                      ? 'bg-brand/10 border border-brand/25'
+                      : plan.elite
+                      ? 'bg-yellow-500/5 border border-yellow-500/20'
+                      : plan.gold
+                      ? 'bg-blue-500/5 border border-blue-400/20'
+                      : 'bg-white/[0.02] border border-white/[0.06]'
+                  }`}
+                >
+                  <Users size={20} className={`mx-auto mb-2 ${plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : plan.gold ? 'text-blue-400' : 'text-white/30'}`} />
+                  <div className={`text-3xl font-bold mb-1 ${plan.featured ? 'text-brand' : plan.elite ? 'text-yellow-400' : plan.gold ? 'text-blue-400' : 'text-white/70'}`}>
+                    {cvCount}
+                  </div>
+                  <div className="text-xs text-white/35 font-medium">{plan.name}</div>
+                  <div className="text-xs text-white/25">{cvCount > 1 ? p.profiles.units : p.profiles.unit}</div>
                 </div>
-                <div className="text-xs text-white/35 font-medium">{plan.name}</div>
-                <div className="text-xs text-white/25">profil{(FEATURES.find(f => f.highlight)?.values[i] as number) > 1 ? 's' : ''} CV</div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </motion.div>
 
@@ -537,9 +451,9 @@ export default function PricingPage() {
           transition={{ delay: 0.5 }}
           className="max-w-2xl mx-auto mb-16"
         >
-          <h2 className="text-2xl font-bold text-center mb-8">Questions fréquentes</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">{p.faqTitle}</h2>
           <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl px-6">
-            {FAQS.map((faq, i) => <FaqItem key={i} q={faq.q} a={faq.a} />)}
+            {p.faqs.map((faq, i) => <FaqItem key={i} q={faq.q} a={faq.a} />)}
           </div>
         </motion.div>
 
@@ -550,9 +464,9 @@ export default function PricingPage() {
           transition={{ delay: 0.55 }}
           className="text-center"
         >
-          <p className="text-white/30 text-sm mb-4">Déjà un compte ?</p>
+          <p className="text-white/30 text-sm mb-4">{p.bottom.alreadyAccount}</p>
           <Link href="/login" className="text-brand hover:text-brand/80 text-sm font-medium transition-colors">
-            Se connecter →
+            {p.bottom.login}
           </Link>
         </motion.div>
       </div>

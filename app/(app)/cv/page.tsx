@@ -6,6 +6,8 @@ import {
   Star, ChevronDown, ChevronUp, RefreshCw, ExternalLink,
   FileText, Languages, Clock, BadgeCheck, Trash2
 } from 'lucide-react'
+import { useLanguage } from '@/lib/i18n'
+import { useT } from '@/lib/translations'
 
 const HIDDEN_KEY = 'jobspeeder_hidden_profiles'
 
@@ -85,6 +87,10 @@ function Chip({ children }: { children: React.ReactNode }) {
 }
 
 export default function CVPage() {
+  const { lang } = useLanguage()
+  const tr = useT(lang)
+  const c = tr.app.cv
+
   const [profiles, setProfiles] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -146,21 +152,21 @@ export default function CVPage() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold">Mon profil CV</h1>
-        <p className="text-white/40 mt-1">{profiles.length} profil{profiles.length !== 1 ? 's' : ''} enregistré{profiles.length !== 1 ? 's' : ''}</p>
+        <h1 className="text-2xl font-bold">{c.title}</h1>
+        <p className="text-white/40 mt-1">{profiles.length} CV</p>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-20 text-white/30">
           <RefreshCw size={20} className="animate-spin mr-2" />
-          Chargement...
+          {c.loading}
         </div>
       ) : profiles.length === 0 ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
           <div className="p-5 bg-white/5 rounded-2xl inline-flex mb-4">
             <FileText size={36} className="text-white/20" />
           </div>
-          <p className="text-white/30">Aucun profil trouvé dans le sheet USER_PROFILES</p>
+          <p className="text-white/30">{c.noProfiles}</p>
         </motion.div>
       ) : (
         <div className="space-y-4">
@@ -189,7 +195,7 @@ export default function CVPage() {
                       <div className="font-semibold truncate">{fullName || p.profil_id || '—'}</div>
                       <div className="text-xs text-white/30 mt-0.5">
                         {p.job_titles_cibles && <span>{p.job_titles_cibles}</span>}
-                        {p.date_mise_a_jour && <span> · Mis à jour le {p.date_mise_a_jour}</span>}
+                        {p.date_mise_a_jour && <span> · {c.updatedAt} {p.date_mise_a_jour}</span>}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -209,7 +215,7 @@ export default function CVPage() {
                         onClick={() => handleDelete(key, p.profil_id)}
                         disabled={!!deletingId && deletingId === key}
                         className="p-2 text-white/20 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/5"
-                        title="Supprimer ce profil"
+                        title={c.deleteTitle}
                       >
                         {deletingId && deletingId === key
                           ? <RefreshCw size={14} className="animate-spin" />
@@ -238,7 +244,7 @@ export default function CVPage() {
                         <div className="p-5 space-y-6">
 
                           {/* Infos personnelles */}
-                          <Section title="Informations personnelles" icon={User}>
+                          <Section title={c.sectionPersonal} icon={User}>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                               {p.email && (
                                 <div className="flex items-center gap-2 p-3 bg-white/3 border border-white/5 rounded-xl">
@@ -278,7 +284,7 @@ export default function CVPage() {
                               {p.years_experience && (
                                 <div className="flex items-center gap-2 p-3 bg-white/3 border border-white/5 rounded-xl">
                                   <Briefcase size={13} className="text-white/30 flex-shrink-0" />
-                                  <span className="text-sm text-white/70">{p.years_experience} ans d&apos;exp.</span>
+                                  <span className="text-sm text-white/70">{p.years_experience} {c.yearsExp}</span>
                                 </div>
                               )}
                             </div>
@@ -286,14 +292,14 @@ export default function CVPage() {
 
                           {/* Résumé */}
                           {p.experience_summary && (
-                            <Section title="Résumé professionnel" icon={Star}>
+                            <Section title={c.sectionSummary} icon={Star}>
                               <p className="text-sm text-white/70 leading-relaxed">{p.experience_summary}</p>
                             </Section>
                           )}
 
                           {/* Compétences */}
                           {skills.length > 0 && (
-                            <Section title="Compétences clés" icon={BadgeCheck}>
+                            <Section title={c.sectionSkills} icon={BadgeCheck}>
                               <div className="flex flex-wrap gap-2">
                                 {skills.map((s, j) => <Chip key={j}>{s}</Chip>)}
                               </div>
@@ -302,7 +308,7 @@ export default function CVPage() {
 
                           {/* Langues */}
                           {p.languages && typeof p.languages === 'object' && (
-                            <Section title="Langues" icon={Languages}>
+                            <Section title={c.sectionLanguages} icon={Languages}>
                               <div className="flex flex-wrap gap-2">
                                 {Object.entries(p.languages).map(([lang, level]) => (
                                   <div key={lang} className="px-3 py-1.5 bg-white/5 border border-white/8 rounded-xl text-sm">
@@ -316,7 +322,7 @@ export default function CVPage() {
 
                           {/* Expériences */}
                           {experiences.length > 0 && (
-                            <Section title="Expériences professionnelles" icon={Briefcase}>
+                            <Section title={c.sectionExperience} icon={Briefcase}>
                               <div className="space-y-3">
                                 {experiences.map((exp, j) => (
                                   <div key={j} className="p-4 bg-white/3 border border-white/5 rounded-xl">
@@ -329,7 +335,7 @@ export default function CVPage() {
                                         </div>
                                       </div>
                                       <div className="text-xs text-white/30 flex-shrink-0">
-                                        {exp.start_date} – {exp.current ? 'Présent' : (exp.end_date || '—')}
+                                        {exp.start_date} – {exp.current ? c.present : (exp.end_date || '—')}
                                         {exp.duration_months && <div className="text-right">{exp.duration_months} mois</div>}
                                       </div>
                                     </div>
@@ -344,7 +350,7 @@ export default function CVPage() {
 
                           {/* Formation */}
                           {(p.highest_degree || p.school) && (
-                            <Section title="Formation" icon={GraduationCap}>
+                            <Section title={c.sectionEducation} icon={GraduationCap}>
                               <div className="p-4 bg-white/3 border border-white/5 rounded-xl">
                                 <div className="font-medium text-sm">{p.highest_degree} {p.education_field && `— ${p.education_field}`}</div>
                                 <div className="text-xs text-white/40 mt-0.5">
@@ -357,7 +363,7 @@ export default function CVPage() {
 
                           {/* Préférences de candidature */}
                           {(p.poste || p.localisation || p.contrat || p.salary_expectation || p.availability || p.work_authorization) && (
-                            <Section title="Préférences de candidature" icon={Clock}>
+                            <Section title={c.sectionPreferences} icon={Clock}>
                               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                 {p.poste && (
                                   <div className="p-3 bg-white/3 border border-white/5 rounded-xl">

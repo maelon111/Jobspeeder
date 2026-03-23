@@ -6,13 +6,19 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Toggle } from '@/components/ui/Toggle'
 import {
-  User, Target, Zap, RefreshCw, CheckCircle, AlertCircle
+  User, Target, RefreshCw, CheckCircle, AlertCircle
 } from 'lucide-react'
 import type { Profile, JobPreferences } from '@/types/supabase'
+import { useLanguage } from '@/lib/i18n'
+import { useT } from '@/lib/translations'
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
 export default function SettingsPage() {
+  const { lang } = useLanguage()
+  const tr = useT(lang)
+  const s = tr.app.settings
+
   const [loading, setLoading] = useState(true)
   const [profileSave, setProfileSave] = useState<SaveState>('idle')
   const [prefsSave, setPrefsSave] = useState<SaveState>('idle')
@@ -112,7 +118,7 @@ export default function SettingsPage() {
       <div className="flex items-center justify-center h-full min-h-screen">
         <div className="flex items-center gap-3 text-white/40">
           <RefreshCw size={20} className="animate-spin" />
-          Chargement...
+          {tr.app.loading}
         </div>
       </div>
     )
@@ -125,8 +131,8 @@ export default function SettingsPage() {
       </div>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold">Paramètres</h1>
-        <p className="text-white/40 mt-1">Gérez votre profil et vos préférences de recherche</p>
+        <h1 className="text-2xl font-bold">{s.title}</h1>
+        <p className="text-white/40 mt-1">{s.subtitle}</p>
       </div>
 
       {/* Profile section */}
@@ -136,39 +142,39 @@ export default function SettingsPage() {
             <User size={20} className="text-blue-400" />
           </div>
           <div>
-            <h2 className="font-semibold">Profil personnel</h2>
-            <p className="text-xs text-white/40">Ces informations apparaissent dans vos candidatures</p>
+            <h2 className="font-semibold">{s.sectionProfile}</h2>
+            <p className="text-xs text-white/40">{s.sectionProfileHint}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
-            label="Nom complet"
+            label={s.fullName}
             placeholder="Jean Dupont"
             value={profile.full_name || ''}
             onChange={e => setProfile(p => ({ ...p, full_name: e.target.value }))}
           />
           <Input
-            label="Téléphone"
+            label={s.phone}
             placeholder="+33 6 00 00 00 00"
             value={profile.phone || ''}
             onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))}
           />
           <Input
-            label="Localisation"
+            label={s.location}
             placeholder="Paris, France"
             value={profile.location || ''}
             onChange={e => setProfile(p => ({ ...p, location: e.target.value }))}
           />
           <Input
-            label="LinkedIn"
+            label={s.linkedin}
             placeholder="linkedin.com/in/prenom-nom"
             value={profile.linkedin_url || ''}
             onChange={e => setProfile(p => ({ ...p, linkedin_url: e.target.value }))}
           />
           <div className="sm:col-span-2">
             <Input
-              label="Portfolio / Site web"
+              label={s.portfolio}
               placeholder="https://monportfolio.com"
               value={profile.portfolio_url || ''}
               onChange={e => setProfile(p => ({ ...p, portfolio_url: e.target.value }))}
@@ -179,16 +185,16 @@ export default function SettingsPage() {
         <div className="flex items-center justify-end gap-3 mt-4">
           {profileSave === 'saved' && (
             <span className="text-xs text-brand flex items-center gap-1">
-              <CheckCircle size={12} /> Sauvegardé
+              <CheckCircle size={12} /> {s.saved}
             </span>
           )}
           {profileSave === 'error' && (
             <span className="text-xs text-red-400 flex items-center gap-1">
-              <AlertCircle size={12} /> Erreur
+              <AlertCircle size={12} /> {s.error}
             </span>
           )}
           <Button onClick={saveProfile} loading={profileSave === 'saving'} size="sm">
-            Sauvegarder
+            {s.save}
           </Button>
         </div>
       </motion.div>
@@ -201,46 +207,46 @@ export default function SettingsPage() {
               <Target size={20} className="text-brand" />
             </div>
             <div>
-              <h2 className="font-semibold">Critères de recherche</h2>
-              <p className="text-xs text-white/40">L&apos;automatisation se basera sur ces critères</p>
+              <h2 className="font-semibold">{s.sectionPrefs}</h2>
+              <p className="text-xs text-white/40">{s.sectionPrefsHint}</p>
             </div>
           </div>
           <Toggle
             checked={prefs.is_active ?? true}
             onChange={val => setPrefs(p => ({ ...p, is_active: val }))}
-            label={prefs.is_active ? 'Actif' : 'Inactif'}
+            label={prefs.is_active ? s.active : s.inactive}
           />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
             <Input
-              label="Poste recherché *"
+              label={s.jobTitle}
               placeholder="Développeur Full Stack, Product Manager..."
               value={prefs.job_title || ''}
               onChange={e => setPrefs(p => ({ ...p, job_title: e.target.value }))}
             />
           </div>
           <Input
-            label="Localisation"
+            label={s.location}
             placeholder="Paris, Remote..."
             value={prefs.location || ''}
             onChange={e => setPrefs(p => ({ ...p, location: e.target.value }))}
           />
           <div>
-            <label className="text-sm font-medium text-white/70 block mb-1.5">Mode de travail</label>
+            <label className="text-sm font-medium text-white/70 block mb-1.5">{s.workMode}</label>
             <select
               className="w-full bg-dark-200 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand/50 text-sm"
               value={prefs.work_mode || 'hybrid'}
               onChange={e => setPrefs(p => ({ ...p, work_mode: e.target.value }))}
             >
-              <option value="remote">Télétravail complet</option>
-              <option value="hybrid">Hybride</option>
-              <option value="onsite">Présentiel</option>
+              <option value="remote">{s.workModeRemote}</option>
+              <option value="hybrid">{s.workModeHybrid}</option>
+              <option value="onsite">{s.workModeOnsite}</option>
             </select>
           </div>
           <div>
-            <label className="text-sm font-medium text-white/70 block mb-1.5">Type de contrat</label>
+            <label className="text-sm font-medium text-white/70 block mb-1.5">{s.contractType}</label>
             <div className="flex flex-wrap gap-2">
               {['CDI', 'CDD', 'Freelance', 'Stage', 'Alternance'].map(type => (
                 <button
@@ -259,14 +265,14 @@ export default function SettingsPage() {
             </div>
           </div>
           <Input
-            label="Salaire min (€/an)"
+            label={s.salaryMin}
             type="number"
             placeholder="40000"
             value={prefs.salary_min?.toString() || ''}
             onChange={e => setPrefs(p => ({ ...p, salary_min: e.target.value ? parseInt(e.target.value) : null }))}
           />
           <Input
-            label="Salaire max (€/an)"
+            label={s.salaryMax}
             type="number"
             placeholder="70000"
             value={prefs.salary_max?.toString() || ''}
@@ -277,63 +283,16 @@ export default function SettingsPage() {
         <div className="flex items-center justify-end gap-3 mt-4">
           {prefsSave === 'saved' && (
             <span className="text-xs text-brand flex items-center gap-1">
-              <CheckCircle size={12} /> Sauvegardé
+              <CheckCircle size={12} /> {s.saved}
             </span>
           )}
           {prefsSave === 'error' && (
             <span className="text-xs text-red-400 flex items-center gap-1">
-              <AlertCircle size={12} /> Erreur
+              <AlertCircle size={12} /> {s.error}
             </span>
           )}
           <Button onClick={savePrefs} loading={prefsSave === 'saving'} size="sm">
-            Sauvegarder
-          </Button>
-        </div>
-      </motion.div>
-
-      {/* Automation / n8n */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2.5 bg-purple-500/10 rounded-xl">
-            <Zap size={20} className="text-purple-400" />
-          </div>
-          <div>
-            <h2 className="font-semibold">Intégration n8n</h2>
-            <p className="text-xs text-white/40">Connectez votre workflow d&apos;automatisation n8n</p>
-          </div>
-        </div>
-
-        <Input
-          label="URL du webhook n8n"
-          placeholder="https://votre-n8n.com/webhook/xxxx"
-          value={prefs.n8n_webhook_url || ''}
-          onChange={e => setPrefs(p => ({ ...p, n8n_webhook_url: e.target.value }))}
-        />
-        <p className="text-xs text-white/30 mt-2 mb-4">
-          Ce webhook sera appelé avec vos préférences de recherche pour déclencher l&apos;automatisation. Laissez vide pour utiliser le webhook global configuré sur le serveur.
-        </p>
-
-        <div className="p-4 bg-brand/5 border border-brand/15 rounded-xl">
-          <div className="flex items-center gap-2 mb-2">
-            <Zap size={14} className="text-brand" />
-            <span className="text-xs font-semibold text-brand">Comment ça marche ?</span>
-          </div>
-          <ol className="text-xs text-white/50 space-y-1 list-decimal list-inside">
-            <li>Créez un workflow n8n avec un trigger webhook</li>
-            <li>Ajoutez vos nœuds de scraping (LinkedIn, Indeed, etc.)</li>
-            <li>Renvoyez les candidatures vers <code className="text-brand/70">/api/webhook/n8n</code></li>
-            <li>JobSpeeder enregistre et suit vos candidatures automatiquement</li>
-          </ol>
-        </div>
-
-        <div className="flex items-center justify-end gap-3 mt-4">
-          {prefsSave === 'saved' && (
-            <span className="text-xs text-brand flex items-center gap-1">
-              <CheckCircle size={12} /> Sauvegardé
-            </span>
-          )}
-          <Button onClick={savePrefs} loading={prefsSave === 'saving'} size="sm">
-            Sauvegarder le webhook
+            {s.save}
           </Button>
         </div>
       </motion.div>

@@ -4,11 +4,16 @@ import Image from 'next/image'
 import { Menu, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
+import { useLanguage } from '@/lib/i18n'
+import { useT } from '@/lib/translations'
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { lang } = useLanguage()
+  const tr = useT(lang)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -70,25 +75,26 @@ export function Navbar() {
               href="/blog"
               className="text-sm text-white/55 hover:text-white transition-colors px-4 py-2 rounded-xl hover:bg-white/5"
             >
-              Blog
+              {tr.navbar.blog}
             </Link>
             <Link
               href="/pricing"
               className="text-sm text-white/55 hover:text-white transition-colors px-4 py-2 rounded-xl hover:bg-white/5"
             >
-              Tarifs
+              {tr.navbar.pricing}
             </Link>
             <Link
               href="/login"
               className="text-sm text-white/55 hover:text-white transition-colors px-4 py-2 rounded-xl hover:bg-white/5"
             >
-              Connexion
+              {tr.navbar.login}
             </Link>
+            <LanguageSwitcher />
             <Link
               href="/register"
               className="text-sm font-semibold px-5 py-2 bg-brand text-black rounded-xl hover:bg-brand-dark transition-all duration-150 active:scale-95"
             >
-              Commencer →
+              {tr.navbar.register}
             </Link>
           </div>
 
@@ -118,28 +124,31 @@ export function Navbar() {
                   onClick={closeMenu}
                   className="text-sm text-white/60 hover:text-white transition-colors px-4 py-2.5 rounded-xl hover:bg-white/8 text-center"
                 >
-                  Blog
+                  {tr.navbar.blog}
                 </Link>
                 <Link
                   href="/pricing"
                   onClick={closeMenu}
                   className="text-sm text-white/60 hover:text-white transition-colors px-4 py-2.5 rounded-xl hover:bg-white/8 text-center"
                 >
-                  Tarifs
+                  {tr.navbar.pricing}
                 </Link>
                 <Link
                   href="/login"
                   onClick={closeMenu}
                   className="text-sm text-white/60 hover:text-white transition-colors px-4 py-2.5 rounded-xl hover:bg-white/8 text-center"
                 >
-                  Connexion
+                  {tr.navbar.login}
                 </Link>
+                <div className="flex justify-center">
+                  <LanguageSwitcher />
+                </div>
                 <Link
                   href="/register"
                   onClick={closeMenu}
                   className="text-sm font-bold px-4 py-2.5 bg-brand text-black rounded-xl hover:bg-brand-dark transition-colors text-center"
                 >
-                  Commencer gratuitement
+                  {tr.navbar.registerMobile}
                 </Link>
               </div>
             </motion.div>

@@ -7,6 +7,9 @@ const langs: { code: Language; label: string; flag: string }[] = [
   { code: 'fr', label: 'Français', flag: '🇫🇷' },
   { code: 'en', label: 'English', flag: '🇬🇧' },
   { code: 'es', label: 'Español', flag: '🇪🇸' },
+  { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+  { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
 ]
 
 export function LanguageSwitcher({ className = '' }: { className?: string }) {
@@ -36,7 +39,7 @@ export function LanguageSwitcher({ className = '' }: { className?: string }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 bottom-full mb-1 w-36 bg-[#111] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
+        <div className="absolute right-0 bottom-full mb-1 w-40 bg-[#111] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
           {langs.map(l => (
             <button
               key={l.code}

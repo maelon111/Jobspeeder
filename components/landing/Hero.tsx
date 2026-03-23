@@ -2,15 +2,28 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, Zap, CheckCircle2, TrendingUp } from 'lucide-react'
-
-const mockApplications = [
-  { company: 'Stripe', role: 'Senior Engineer', status: 'interview', color: 'text-brand', bg: 'bg-brand/15', dot: 'bg-brand' },
-  { company: 'Notion', role: 'Product Manager', status: 'Envoyée', color: 'text-blue-400', bg: 'bg-blue-500/15', dot: 'bg-blue-400' },
-  { company: 'Vercel', role: 'Frontend Dev', status: 'En attente', color: 'text-yellow-400', bg: 'bg-yellow-500/15', dot: 'bg-yellow-400' },
-  { company: 'Linear', role: 'UX Designer', status: 'Envoyée', color: 'text-blue-400', bg: 'bg-blue-500/15', dot: 'bg-blue-400' },
-]
+import { useLanguage } from '@/lib/i18n'
+import { useT } from '@/lib/translations'
 
 export function Hero() {
+  const { lang } = useLanguage()
+  const tr = useT(lang)
+  const h = tr.hero
+
+  const mockApplications = [
+    { company: 'Stripe', role: 'Senior Engineer', status: h.statInterviews.replace(/s$/, ''), color: 'text-brand', bg: 'bg-brand/15', dot: 'bg-brand' },
+    { company: 'Notion', role: 'Product Manager', status: h.sent, color: 'text-blue-400', bg: 'bg-blue-500/15', dot: 'bg-blue-400' },
+    { company: 'Vercel', role: 'Frontend Dev', status: h.pending, color: 'text-yellow-400', bg: 'bg-yellow-500/15', dot: 'bg-yellow-400' },
+    { company: 'Linear', role: 'UX Designer', status: h.sent, color: 'text-blue-400', bg: 'bg-blue-500/15', dot: 'bg-blue-400' },
+  ]
+
+  const mockStats = [
+    { label: h.statSent, value: '247', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { label: h.statInterviews, value: '12', color: 'text-brand', bg: 'bg-brand/10' },
+    { label: h.statPending, value: '89', color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+    { label: h.statRate, value: '4.8%', color: 'text-purple-400', bg: 'bg-purple-500/10' },
+  ]
+
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 pb-12">
       {/* Background — animated CSS blobs */}
@@ -33,28 +46,24 @@ export function Hero() {
         }
       `}</style>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Main green blob */}
         <div style={{
           position: 'absolute', top: '-80px', left: '15%',
           width: '550px', height: '450px',
           background: '#00ff88', filter: 'blur(55px)', opacity: 0.2,
           animation: 'blobMorph 14s ease-in-out infinite, blobDrift1 22s ease-in-out infinite',
         }} />
-        {/* Blue blob — left */}
         <div style={{
           position: 'absolute', top: '25%', left: '-8%',
           width: '420px', height: '380px',
           background: '#3b82f6', filter: 'blur(50px)', opacity: 0.14,
           animation: 'blobMorph 18s ease-in-out infinite 2s, blobDrift2 26s ease-in-out infinite 1s',
         }} />
-        {/* Purple blob — right */}
         <div style={{
           position: 'absolute', top: '20%', right: '-5%',
           width: '400px', height: '460px',
           background: '#a855f7', filter: 'blur(50px)', opacity: 0.12,
           animation: 'blobMorph 20s ease-in-out infinite 4s',
         }} />
-        {/* Secondary green blob — bottom center */}
         <div style={{
           position: 'absolute', bottom: '10%', right: '25%',
           width: '300px', height: '260px',
@@ -82,7 +91,7 @@ export function Hero() {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand/8 border border-brand/20 text-brand text-sm font-medium mb-8"
         >
           <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
-          Propulsé par GPT-4o · Automatisation 24h/24
+          {h.badge}
         </motion.div>
 
         {/* Headline */}
@@ -92,12 +101,12 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.08 }}
           className="text-5xl md:text-[72px] font-black tracking-tight leading-[1.05] mb-6"
         >
-          <span className="text-white">Postulez à </span>
-          <span className="text-gradient-brand">100 offres</span>
+          <span className="text-white">{h.headline1}</span>
+          <span className="text-gradient-brand">{h.headline2}</span>
           <br />
-          <span className="text-white">pendant votre </span>
+          <span className="text-white">{h.headline3}</span>
           <span className="relative inline-block">
-            <span className="text-white">sommeil</span>
+            <span className="text-white">{h.headline4}</span>
             <svg className="absolute -bottom-1 left-0 w-full" height="6" viewBox="0 0 200 6" fill="none" preserveAspectRatio="none">
               <path d="M0 5 Q50 0 100 4 Q150 8 200 3" stroke="#00ff88" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6"/>
             </svg>
@@ -111,8 +120,7 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.16 }}
           className="text-lg md:text-xl text-white/55 mb-10 max-w-2xl mx-auto leading-relaxed"
         >
-          Uploadez votre CV, laissez l&apos;IA l&apos;optimiser pour les filtres ATS,
-          et notre bot postule automatiquement aux offres qui vous correspondent.
+          {h.sub}
         </motion.p>
 
         {/* CTAs */}
@@ -126,14 +134,14 @@ export function Hero() {
             href="/register"
             className="group inline-flex items-center gap-2.5 px-8 py-4 bg-brand text-black font-bold rounded-2xl hover:bg-brand-dark transition-all duration-200 text-base glow-brand active:scale-95 shadow-brand"
           >
-            Commencer gratuitement
+            {h.ctaPrimary}
             <ArrowRight size={18} className="transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
           <Link
             href="/login"
             className="inline-flex items-center gap-2 px-8 py-4 text-white border border-white/12 font-semibold rounded-2xl hover:bg-white/5 hover:border-white/20 transition-all duration-200 text-base"
           >
-            Se connecter
+            {h.ctaSecondary}
           </Link>
         </motion.div>
 
@@ -146,17 +154,17 @@ export function Hero() {
         >
           <span className="flex items-center gap-1.5">
             <CheckCircle2 size={13} className="text-brand/60" />
-            Aucune carte requise
+            {h.trust1}
           </span>
           <span className="w-px h-3.5 bg-white/15" />
           <span className="flex items-center gap-1.5">
             <CheckCircle2 size={13} className="text-brand/60" />
-            Setup en 3 minutes
+            {h.trust2}
           </span>
           <span className="w-px h-3.5 bg-white/15" />
           <span className="flex items-center gap-1.5">
             <CheckCircle2 size={13} className="text-brand/60" />
-            Résultats en 48h
+            {h.trust3}
           </span>
         </motion.div>
 
@@ -166,15 +174,10 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
           className="relative mx-auto max-w-3xl"
-          style={{
-            perspective: '1200px',
-          }}
+          style={{ perspective: '1200px' }}
         >
           <div
-            style={{
-              transform: 'rotateX(6deg)',
-              transformOrigin: 'top center',
-            }}
+            style={{ transform: 'rotateX(6deg)', transformOrigin: 'top center' }}
             className="relative"
           >
             {/* Browser chrome */}
@@ -220,12 +223,7 @@ export function Hero() {
                 <div className="flex-1 p-5 overflow-hidden">
                   {/* Stats row */}
                   <div className="grid grid-cols-4 gap-3 mb-5">
-                    {[
-                      { label: 'Envoyées', value: '247', color: 'text-blue-400', bg: 'bg-blue-500/10' },
-                      { label: 'Entretiens', value: '12', color: 'text-brand', bg: 'bg-brand/10' },
-                      { label: 'En attente', value: '89', color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
-                      { label: 'Taux succès', value: '4.8%', color: 'text-purple-400', bg: 'bg-purple-500/10' },
-                    ].map((stat, i) => (
+                    {mockStats.map((stat, i) => (
                       <div key={i} className="rounded-xl p-3 border border-white/5"
                         style={{ background: 'rgba(255,255,255,0.03)' }}
                       >
@@ -240,7 +238,7 @@ export function Hero() {
                     style={{ background: 'rgba(255,255,255,0.02)' }}
                   >
                     <div className="px-4 py-2.5 border-b border-white/5 text-[10px] text-white/30 uppercase tracking-wider font-medium">
-                      Candidatures récentes
+                      {h.recentApps}
                     </div>
                     {mockApplications.map((app, i) => (
                       <div key={i} className="flex items-center gap-3 px-4 py-2.5 border-b border-white/4 last:border-0 hover:bg-white/2">
@@ -274,7 +272,7 @@ export function Hero() {
                 <TrendingUp size={12} className="text-brand" />
               </div>
               <div>
-                <div className="text-xs font-semibold text-white">Nouvelle candidature</div>
+                <div className="text-xs font-semibold text-white">{h.newApp}</div>
                 <div className="text-[10px] text-white/40">Airbnb · Designer Product</div>
               </div>
             </motion.div>
@@ -290,8 +288,8 @@ export function Hero() {
                 <CheckCircle2 size={12} className="text-green-400" />
               </div>
               <div>
-                <div className="text-xs font-semibold text-white">Entretien obtenu</div>
-                <div className="text-[10px] text-white/40">Stripe · Taux 4.8%</div>
+                <div className="text-xs font-semibold text-white">{h.interviewGot}</div>
+                <div className="text-[10px] text-white/40">Stripe · 4.8%</div>
               </div>
             </motion.div>
           </div>

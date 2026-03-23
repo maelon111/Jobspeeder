@@ -4,6 +4,8 @@ import { motion } from 'framer-motion'
 import { Search, RefreshCw, Briefcase, MapPin, Wifi, FileText, CheckSquare, Square, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import Image from 'next/image'
+import { useLanguage } from '@/lib/i18n'
+import { useT } from '@/lib/translations'
 
 type JobOffer = {
   job_id: string | null
@@ -18,6 +20,10 @@ type JobOffer = {
 const PER_PAGE = 20
 
 export default function JobOffersPage() {
+  const { lang } = useLanguage()
+  const tr = useT(lang)
+  const jo = tr.app.jobOffers
+
   const [jobs, setJobs] = useState<JobOffer[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -120,10 +126,10 @@ export default function JobOffersPage() {
           <div className="p-2 bg-brand/10 rounded-xl">
             <Briefcase size={20} className="text-brand" />
           </div>
-          <h1 className="text-xl font-semibold text-white">Offres d&apos;emploi</h1>
+          <h1 className="text-xl font-semibold text-white">{jo.title}</h1>
         </div>
         <p className="text-white/45 text-sm ml-[52px]">
-          Sélectionnez les offres qui vous intéressent et postulez en un clic.
+          {jo.subtitle}
         </p>
       </motion.div>
 
@@ -135,7 +141,7 @@ export default function JobOffersPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher par titre, entreprise, localisation…"
+            placeholder={jo.searchPlaceholder}
             className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-brand/40 transition-colors"
           />
         </div>
@@ -144,7 +150,7 @@ export default function JobOffersPage() {
           className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-white/[0.08] text-white/45 hover:text-white/80 hover:bg-white/[0.04] transition-all text-sm"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-          Actualiser
+          {jo.refresh}
         </button>
       </div>
 
@@ -157,17 +163,17 @@ export default function JobOffersPage() {
         >
           <span className="text-sm text-white/70">
             <span className="text-brand font-semibold">{selected.size}</span>{' '}
-            offre{selected.size > 1 ? 's' : ''} sélectionnée{selected.size > 1 ? 's' : ''}
+            ×
           </span>
           <div className="flex gap-2">
             <button
               onClick={() => setSelected(new Set())}
               className="text-xs text-white/40 hover:text-white/70 transition-colors px-2"
             >
-              Tout désélectionner
+              {jo.deselectAll}
             </button>
             <Button variant="primary" size="sm" onClick={handleApply} disabled={applying}>
-              {applying ? 'Envoi…' : 'Postuler aux offres sélectionnées'}
+              {applying ? jo.applying : jo.apply}
             </Button>
           </div>
         </motion.div>
@@ -179,7 +185,7 @@ export default function JobOffersPage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3 mb-5 text-sm text-green-400"
         >
-          Candidatures envoyées avec succès !
+          {jo.applySuccess}
         </motion.div>
       )}
 
@@ -191,7 +197,7 @@ export default function JobOffersPage() {
             <button
               onClick={toggleSelectAll}
               className="text-white/30 hover:text-brand transition-colors"
-              title={allSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
+              title={allSelected ? jo.deselectAll : jo.selectAll}
             >
               {allSelected
                 ? <CheckSquare size={16} className="text-brand" />
@@ -200,23 +206,23 @@ export default function JobOffersPage() {
             </button>
           </div>
           <div />
-          <div>Titre</div>
-          <div>Entreprise</div>
-          <div>Localisation</div>
-          <div>Remote</div>
-          <div>Type d&apos;emploi</div>
+          <div>{jo.colTitle}</div>
+          <div>{jo.colCompany}</div>
+          <div>{jo.colLocation}</div>
+          <div>{jo.colRemote}</div>
+          <div>{jo.colType}</div>
         </div>
 
         {/* Rows */}
         {loading ? (
           <div className="py-20 flex flex-col items-center gap-3 text-white/25">
             <RefreshCw size={20} className="animate-spin" />
-            <span className="text-sm">Chargement…</span>
+            <span className="text-sm">{jo.loading}</span>
           </div>
         ) : jobs.length === 0 ? (
           <div className="py-20 flex flex-col items-center gap-3 text-white/25">
             <Briefcase size={24} />
-            <span className="text-sm">Aucune offre disponible</span>
+            <span className="text-sm">{jo.noOffers}</span>
           </div>
         ) : (
           <div>
@@ -315,7 +321,7 @@ export default function JobOffersPage() {
       {!loading && totalPages > 1 && (
         <div className="flex items-center justify-between mt-5">
           <p className="text-xs text-white/30">
-            {page * PER_PAGE + 1}–{Math.min((page + 1) * PER_PAGE, total)} sur {total} offre{total > 1 ? 's' : ''}
+            {page * PER_PAGE + 1}–{Math.min((page + 1) * PER_PAGE, total)} / {total}
           </p>
           <div className="flex items-center gap-1">
             <button
@@ -364,7 +370,7 @@ export default function JobOffersPage() {
 
       {!loading && total > 0 && totalPages <= 1 && (
         <p className="text-center text-xs text-white/25 mt-4">
-          {total} offre{total > 1 ? 's' : ''} disponible{total > 1 ? 's' : ''}
+          {total} {jo.title.toLowerCase()}
         </p>
       )}
     </div>

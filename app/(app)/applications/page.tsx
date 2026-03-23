@@ -10,6 +10,8 @@ import {
   ChevronLeft, ChevronRight,
   Zap, Upload, FileText
 } from 'lucide-react'
+import { useLanguage } from '@/lib/i18n'
+import { useT } from '@/lib/translations'
 
 type JobOffer = {
   titre: string
@@ -19,13 +21,6 @@ type JobOffer = {
 }
 
 const CONTRACT_TYPES = ['CDI', 'CDD', 'Freelance', 'Stage']
-
-// [TASK 1] Mapping libellés → valeurs API pour le champ job_type
-const JOB_TYPES: { label: string; value: string }[] = [
-  { label: 'Tous', value: 'all' },
-  { label: 'Temps plein', value: 'fulltime' },
-  { label: 'Temps partiel', value: 'parttime' },
-]
 const COUNTRIES = [
   'Argentina', 'Australia', 'Austria', 'Bahrain', 'Bangladesh', 'Belgium', 'Bulgaria', 'Brazil',
   'Canada', 'Chile', 'China', 'Colombia', 'Costa Rica', 'Croatia', 'Cyprus', 'Czech Republic',
@@ -38,11 +33,20 @@ const COUNTRIES = [
   'Taiwan', 'Thailand', 'Turkey', 'Ukraine', 'United Arab Emirates', 'United Kingdom',
   'United States', 'Uruguay', 'Venezuela', 'Vietnam',
 ]
-const WORK_MODES = ['Présentiel', 'Distanciel', 'Hybride']
-
 const PER_PAGE = 20
 
 export default function ApplicationsPage() {
+  const { lang } = useLanguage()
+  const tr = useT(lang)
+  const a = tr.app.applications
+
+  const JOB_TYPES: { label: string; value: string }[] = [
+    { label: a.jobTypeAll, value: 'all' },
+    { label: a.jobTypeFulltime, value: 'fulltime' },
+    { label: a.jobTypeParttime, value: 'parttime' },
+  ]
+  const WORK_MODES = [a.workModeOnsite, a.workModeRemote, a.workModeHybrid]
+
   const [jobs, setJobs] = useState<JobOffer[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -176,12 +180,12 @@ export default function ApplicationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Candidature automatique</h1>
-          <p className="text-white/40 mt-1">{total} candidature{total !== 1 ? 's' : ''} au total</p>
+          <h1 className="text-2xl font-bold">{a.title}</h1>
+          <p className="text-white/40 mt-1">{total} ×</p>
         </div>
         <Button onClick={() => { setCampaignSuccess(false); setShowCampaignModal(true) }}>
           <Zap size={16} />
-          Nouvelle campagne
+          {a.newCampaign}
         </Button>
       </div>
 
@@ -190,7 +194,7 @@ export default function ApplicationsPage() {
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
         <input
           type="text"
-          placeholder="Rechercher entreprise, poste..."
+          placeholder={a.searchPlaceholder}
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(0) }}
           className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-brand/50"
@@ -202,14 +206,14 @@ export default function ApplicationsPage() {
         {loading ? (
           <div className="flex items-center justify-center py-20 text-white/30">
             <RefreshCw size={20} className="animate-spin mr-2" />
-            Chargement...
+            {a.loading}
           </div>
         ) : jobs.length === 0 ? (
           <div className="text-center py-20">
             <div className="p-4 bg-white/5 rounded-2xl inline-flex mb-4">
               <Briefcase size={32} className="text-white/20" />
             </div>
-            <p className="text-white/30 text-sm">Aucune candidature trouvée</p>
+            <p className="text-white/30 text-sm">{a.noApplications}</p>
           </div>
         ) : (
           <>
@@ -217,10 +221,10 @@ export default function ApplicationsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/8">
-                    <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Poste</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Entreprise</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Statut</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider hidden sm:table-cell">Date</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{a.colJob}</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{a.colCompany}</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">{a.colStatus}</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider hidden sm:table-cell">{a.colDate}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
@@ -244,7 +248,7 @@ export default function ApplicationsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/15 text-blue-400 border border-blue-500/20">
-                          Envoyée
+                          {a.sent}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-xs text-white/30 hidden sm:table-cell">
@@ -260,7 +264,7 @@ export default function ApplicationsPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-6 py-4 border-t border-white/8">
                 <span className="text-xs text-white/30">
-                  {page * PER_PAGE + 1}–{Math.min((page + 1) * PER_PAGE, total)} sur {total}
+                  {page * PER_PAGE + 1}–{Math.min((page + 1) * PER_PAGE, total)} {a.of} {total}
                 </span>
                 <div className="flex gap-2">
                   <Button variant="secondary" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 0}>
@@ -280,7 +284,7 @@ export default function ApplicationsPage() {
       <Modal
         open={showCampaignModal}
         onClose={resetCampaign}
-        title="Nouvelle campagne de candidature automatique"
+        title={a.modalTitle}
         className="max-w-2xl"
       >
         {/* Animation robots — thème JobSpeeder (vert néon #00ff88, fond sombre, glassmorphism) */}
@@ -331,12 +335,12 @@ export default function ApplicationsPage() {
                   </div>
                 </div>
                 <div>
-                  <p className="font-bold text-xl text-white tracking-tight">Campagne lancée !</p>
+                  <p className="font-bold text-xl text-white tracking-tight">{a.successTitle}</p>
                   <p className="text-white/40 text-sm mt-2 max-w-xs mx-auto leading-relaxed">
-                    Vos agents IA sont en route — vos candidatures vont être déposées automatiquement.
+                    {a.successText}
                   </p>
                 </div>
-                <Button onClick={resetCampaign}>Fermer</Button>
+                <Button onClick={resetCampaign}>{a.close}</Button>
               </div>
             ) : (
               /* ─── Robots au travail ─── */
@@ -393,7 +397,7 @@ export default function ApplicationsPage() {
                       <rect x="53" y="46" width="8" height="16" rx="4" fill="#060c16" stroke="rgba(0,255,136,.35)" strokeWidth="1.2"/>
                     </svg>
                     <span className="px-2.5 py-1 rounded-lg text-xs font-medium" style={{background:'rgba(0,255,136,.08)',border:'1px solid rgba(0,255,136,.2)',color:'rgba(0,255,136,.85)'}}>
-                      Recherche
+                      {a.robotSearch}
                     </span>
                   </div>
 
@@ -540,8 +544,8 @@ export default function ApplicationsPage() {
                 {/* Barre de progression */}
                 <div className="relative z-10 w-72">
                   <div className="flex justify-between text-xs mb-1.5" style={{color:'rgba(255,255,255,.3)'}}>
-                    <span>Traitement en cours</span>
-                    <span style={{color:'rgba(0,255,136,.7)'}}>● actif</span>
+                    <span>{a.processing}</span>
+                    <span style={{color:'rgba(0,255,136,.7)'}}>● {a.activeLabel}</span>
                   </div>
                   <div className="w-full h-1.5 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,.06)'}}>
                     <div className="relative h-full rounded-full overflow-hidden"
@@ -554,7 +558,7 @@ export default function ApplicationsPage() {
 
                 {/* Chips statut */}
                 <div className="relative z-10 flex gap-2 flex-wrap justify-center">
-                  {['3 agents actifs','Analyse IA','Candidatures en route'].map((label,i)=>(
+                  {[a.chip1, a.chip2, a.chip3].map((label,i)=>(
                     <div key={i} className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs"
                       style={{background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,255,255,.08)',color:'rgba(255,255,255,.4)'}}>
                       <span className="w-1.5 h-1.5 rounded-full inline-block" style={{background:'#00ff88',boxShadow:'0 0 5px #00ff88',animation:`js-ant 1s ease-in-out infinite ${i*.3}s`}}/>
@@ -570,7 +574,7 @@ export default function ApplicationsPage() {
           <div className="space-y-5">
             {/* CV Upload */}
             <div>
-              <label className="text-sm font-medium text-white/70 block mb-2">CV (PDF ou DOCX) *</label>
+              <label className="text-sm font-medium text-white/70 block mb-2">{a.cvLabel}</label>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -591,12 +595,12 @@ export default function ApplicationsPage() {
                   <>
                     <FileText size={24} className="text-brand" />
                     <span className="text-sm font-medium text-white">{campaignForm.cv.name}</span>
-                    <span className="text-xs text-white/40">Cliquer pour changer</span>
+                    <span className="text-xs text-white/40">{a.cvChange}</span>
                   </>
                 ) : (
                   <>
                     <Upload size={24} className="text-white/30" />
-                    <span className="text-sm text-white/50">Glisser votre CV ici ou cliquer pour parcourir</span>
+                    <span className="text-sm text-white/50">{a.cvDrop}</span>
                     <span className="text-xs text-white/30">PDF, DOCX</span>
                   </>
                 )}
@@ -606,16 +610,16 @@ export default function ApplicationsPage() {
             {/* Ligne 1 : Poste recherché | Prétentions salariales */}
             <div className="grid grid-cols-2 gap-3">
               <Input
-                label="Poste recherché *"
+                label={a.jobLabel}
                 placeholder="Développeur Full Stack..."
                 value={campaignForm.poste}
                 onChange={e => setCampaignForm(prev => ({ ...prev, poste: e.target.value }))}
               />
               <div>
-                <label className="text-sm font-medium text-white/70 block mb-1.5">Prétentions salariales</label>
+                <label className="text-sm font-medium text-white/70 block mb-1.5">{a.salaryLabel}</label>
                 <input
                   type="text"
-                  placeholder="Ex: 45 000€ / an, Négociable..."
+                  placeholder={a.salaryPlaceholder}
                   value={campaignForm.salary_expectation}
                   onChange={e => setCampaignForm(prev => ({ ...prev, salary_expectation: e.target.value }))}
                   className="w-full bg-dark-200 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-brand/50"
@@ -626,26 +630,26 @@ export default function ApplicationsPage() {
             {/* Ligne 2 : Pays | Ville | Rayon */}
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-sm font-medium text-white/70 block mb-1.5">Pays *</label>
+                <label className="text-sm font-medium text-white/70 block mb-1.5">{a.countryLabel}</label>
                 <select
                   value={campaignForm.pays}
                   onChange={e => setCampaignForm(prev => ({ ...prev, pays: e.target.value }))}
                   className="w-full bg-dark-200 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand/50 appearance-none"
                 >
-                  <option value="" disabled className="bg-dark-200">Sélectionner un pays</option>
+                  <option value="" disabled className="bg-dark-200">{a.countrySelect}</option>
                   {COUNTRIES.map(country => (
                     <option key={country} value={country} className="bg-dark-200">{country}</option>
                   ))}
                 </select>
               </div>
               <Input
-                label="Ville *"
+                label={a.cityLabel}
                 placeholder="Paris, Lyon..."
                 value={campaignForm.ville}
                 onChange={e => setCampaignForm(prev => ({ ...prev, ville: e.target.value }))}
               />
               <div>
-                <label className="text-sm font-medium text-white/70 block mb-2">Rayon (km)</label>
+                <label className="text-sm font-medium text-white/70 block mb-2">{a.radiusLabel}</label>
                 <div className="flex gap-2">
                   {['20', '50', '100', '200'].map(r => {
                     const selected = campaignForm.rayon === r
@@ -671,7 +675,7 @@ export default function ApplicationsPage() {
             {/* Ligne 3 : Type de contrat | Type de travail */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-white/70 block mb-2">Type de contrat *</label>
+                <label className="text-sm font-medium text-white/70 block mb-2">{a.contractLabel}</label>
                 <div className="flex flex-wrap gap-2">
                   {CONTRACT_TYPES.map(type => {
                     const selected = campaignForm.contrat.includes(type)
@@ -693,7 +697,7 @@ export default function ApplicationsPage() {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-white/70 block mb-2">Type de travail</label>
+                <label className="text-sm font-medium text-white/70 block mb-2">{a.workTypeLabel}</label>
                 <div className="flex flex-wrap gap-2">
                   {JOB_TYPES.map(({ label, value }) => {
                     const selected = campaignForm.job_type === value
@@ -719,7 +723,7 @@ export default function ApplicationsPage() {
             {/* Ligne 4 : Mode de travail | Disponibilité */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium text-white/70 block mb-2">Mode de travail *</label>
+                <label className="text-sm font-medium text-white/70 block mb-2">{a.workModeLabel}</label>
                 <div className="flex gap-2">
                   {WORK_MODES.map(mode => {
                     const selected = campaignForm.mode === mode
@@ -741,12 +745,12 @@ export default function ApplicationsPage() {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-white/70 block mb-2">Disponibilité</label>
+                <label className="text-sm font-medium text-white/70 block mb-2">{a.availabilityLabel}</label>
                 <div className="flex gap-2">
                   {[
-                    { label: 'Immédiate', value: 'Immédiate' },
-                    { label: '1–3 mois', value: 'Entre 1 - 3 mois' },
-                    { label: '3 mois+', value: 'Plus de 3 mois' },
+                    { label: a.availImmediate, value: 'Immédiate' },
+                    { label: a.avail1to3, value: 'Entre 1 - 3 mois' },
+                    { label: a.avail3plus, value: 'Plus de 3 mois' },
                   ].map(({ label, value }) => {
                     const selected = campaignForm.availability === value
                     return (
@@ -771,7 +775,7 @@ export default function ApplicationsPage() {
             {/* Actions */}
             <div className="flex gap-3 pt-1">
               <Button variant="secondary" onClick={resetCampaign} className="flex-1">
-                Annuler
+                {a.cancel}
               </Button>
               <Button
                 onClick={handleLaunchCampaign}
@@ -783,7 +787,7 @@ export default function ApplicationsPage() {
                 className="flex-1"
               >
                 <Zap size={15} />
-                Lancer la campagne
+                {a.launch}
               </Button>
             </div>
           </div>

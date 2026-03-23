@@ -2,10 +2,16 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, Zap, Star } from 'lucide-react'
+import { useLanguage } from '@/lib/i18n'
+import { useT } from '@/lib/translations'
 
 const avatars = ['S', 'M', 'A', 'T', 'L']
 
 export function CTA() {
+  const { lang } = useLanguage()
+  const tr = useT(lang)
+  const c = tr.cta
+
   return (
     <section className="py-24 px-4">
       <div className="max-w-3xl mx-auto">
@@ -37,12 +43,10 @@ export function CTA() {
               </div>
 
               <h2 className="text-3xl md:text-5xl font-black mb-4 leading-tight">
-                Prêt à accélérer{' '}
-                <br className="hidden md:block" />
-                votre recherche ?
+                {c.title}
               </h2>
               <p className="text-white/45 mb-8 max-w-sm mx-auto text-base leading-relaxed">
-                Rejoignez des milliers de candidats qui trouvent leur emploi idéal avec JobSpeeder.
+                {c.sub}
               </p>
 
               {/* CTA Button */}
@@ -51,7 +55,7 @@ export function CTA() {
                 className="group inline-flex items-center gap-2.5 px-8 py-4 bg-brand text-black font-bold rounded-2xl hover:bg-brand-dark transition-all duration-200 text-base shadow-brand glow-brand active:scale-95 mb-8"
               >
                 <Zap size={16} fill="currentColor" />
-                Démarrer maintenant — c&apos;est gratuit
+                {c.button}
                 <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
 
@@ -80,7 +84,7 @@ export function CTA() {
                     ))}
                   </div>
                   <div className="text-xs text-white/35">
-                    <span className="text-white/60 font-medium">2 400+</span> candidats actifs
+                    <span className="text-white/60 font-medium">2 400+</span> {c.social}
                   </div>
                 </div>
               </div>

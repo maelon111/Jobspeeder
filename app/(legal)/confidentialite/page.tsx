@@ -120,7 +120,7 @@ function renderBody(text: string) {
 
 export default function PrivacyPage() {
   const { lang } = useLanguage()
-  const c = content[lang]
+  const c = content[lang as keyof typeof content] ?? content.fr
 
   return (
     <div>

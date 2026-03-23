@@ -2,45 +2,8 @@
 import { motion, useInView } from 'framer-motion'
 import { useRef, useEffect, useState } from 'react'
 import { TrendingUp, Clock, Zap, Target } from 'lucide-react'
-
-const stats = [
-  {
-    value: 10000,
-    suffix: '+',
-    label: 'Offres analysées',
-    description: 'chaque jour',
-    icon: Target,
-    color: 'text-blue-400',
-    iconBg: 'bg-blue-500/10',
-  },
-  {
-    value: 94,
-    suffix: '%',
-    label: 'Taux de succès',
-    description: 'candidatures envoyées',
-    icon: TrendingUp,
-    color: 'text-brand',
-    iconBg: 'bg-brand/10',
-  },
-  {
-    value: 3,
-    suffix: ' min',
-    label: 'Setup initial',
-    description: 'pour être opérationnel',
-    icon: Zap,
-    color: 'text-yellow-400',
-    iconBg: 'bg-yellow-500/10',
-  },
-  {
-    value: 48,
-    suffix: 'h',
-    label: 'Délai moyen',
-    description: 'avant le premier retour',
-    icon: Clock,
-    color: 'text-purple-400',
-    iconBg: 'bg-purple-500/10',
-  },
-]
+import { useLanguage } from '@/lib/i18n'
+import { useT } from '@/lib/translations'
 
 function AnimatedCounter({ value, suffix, color }: { value: number; suffix: string; color: string }) {
   const [count, setCount] = useState(0)
@@ -62,12 +25,55 @@ function AnimatedCounter({ value, suffix, color }: { value: number; suffix: stri
 
   return (
     <span ref={ref} className={`tabular-nums ${color}`}>
-      {count.toLocaleString('fr-FR')}{suffix}
+      {count.toLocaleString()}{suffix}
     </span>
   )
 }
 
 export function Stats() {
+  const { lang } = useLanguage()
+  const tr = useT(lang)
+  const s = tr.stats
+
+  const stats = [
+    {
+      value: 10000,
+      suffix: '+',
+      label: s.label1,
+      description: s.desc1,
+      icon: Target,
+      color: 'text-blue-400',
+      iconBg: 'bg-blue-500/10',
+    },
+    {
+      value: 94,
+      suffix: '%',
+      label: s.label2,
+      description: s.desc2,
+      icon: TrendingUp,
+      color: 'text-brand',
+      iconBg: 'bg-brand/10',
+    },
+    {
+      value: 3,
+      suffix: ' min',
+      label: s.label3,
+      description: s.desc3,
+      icon: Zap,
+      color: 'text-yellow-400',
+      iconBg: 'bg-yellow-500/10',
+    },
+    {
+      value: 48,
+      suffix: 'h',
+      label: s.label4,
+      description: s.desc4,
+      icon: Clock,
+      color: 'text-purple-400',
+      iconBg: 'bg-purple-500/10',
+    },
+  ]
+
   return (
     <section className="relative py-16 px-4 overflow-hidden">
       {/* Section blob */}

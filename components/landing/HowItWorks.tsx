@@ -1,47 +1,53 @@
 'use client'
 import { motion } from 'framer-motion'
 import { Upload, Sparkles, Rocket, ArrowRight } from 'lucide-react'
-
-const steps = [
-  {
-    icon: Upload,
-    step: '01',
-    title: 'Uploadez votre CV',
-    description: 'Importez votre CV existant ou construisez-en un depuis zéro avec notre éditeur intégré.',
-    accent: 'from-blue-500 to-blue-600',
-    iconBg: 'bg-blue-500/10',
-    iconColor: 'text-blue-400',
-    borderAccent: 'hover:border-blue-500/30',
-    tag: 'PDF, DOCX',
-    tagColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  },
-  {
-    icon: Sparkles,
-    step: '02',
-    title: 'Optimisation IA',
-    description: 'GPT-4o analyse et réécrit votre CV pour maximiser votre score ATS et attirer les recruteurs.',
-    accent: 'from-brand to-brand-dark',
-    iconBg: 'bg-brand/10',
-    iconColor: 'text-brand',
-    borderAccent: 'hover:border-brand/30',
-    tag: 'GPT-4o',
-    tagColor: 'bg-brand/10 text-brand border-brand/20',
-  },
-  {
-    icon: Rocket,
-    step: '03',
-    title: 'Candidatures automatiques',
-    description: 'Notre bot postule aux offres correspondant à vos critères — emails, LinkedIn, sites carrière — 24h/24.',
-    accent: 'from-purple-500 to-purple-600',
-    iconBg: 'bg-purple-500/10',
-    iconColor: 'text-purple-400',
-    borderAccent: 'hover:border-purple-500/30',
-    tag: '24h/24',
-    tagColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  },
-]
+import { useLanguage } from '@/lib/i18n'
+import { useT } from '@/lib/translations'
 
 export function HowItWorks() {
+  const { lang } = useLanguage()
+  const tr = useT(lang)
+  const h = tr.how
+
+  const steps = [
+    {
+      icon: Upload,
+      step: '01',
+      title: h.step1title,
+      description: h.step1desc,
+      accent: 'from-blue-500 to-blue-600',
+      iconBg: 'bg-blue-500/10',
+      iconColor: 'text-blue-400',
+      borderAccent: 'hover:border-blue-500/30',
+      tag: 'PDF, DOCX',
+      tagColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    },
+    {
+      icon: Sparkles,
+      step: '02',
+      title: h.step2title,
+      description: h.step2desc,
+      accent: 'from-brand to-brand-dark',
+      iconBg: 'bg-brand/10',
+      iconColor: 'text-brand',
+      borderAccent: 'hover:border-brand/30',
+      tag: 'GPT-4o',
+      tagColor: 'bg-brand/10 text-brand border-brand/20',
+    },
+    {
+      icon: Rocket,
+      step: '03',
+      title: h.step3title,
+      description: h.step3desc,
+      accent: 'from-purple-500 to-purple-600',
+      iconBg: 'bg-purple-500/10',
+      iconColor: 'text-purple-400',
+      borderAccent: 'hover:border-purple-500/30',
+      tag: '24/7',
+      tagColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+    },
+  ]
+
   return (
     <section className="py-24 px-4">
       <div className="max-w-5xl mx-auto">
@@ -53,14 +59,14 @@ export function HowItWorks() {
           className="text-center mb-16"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/50 text-xs font-medium mb-4">
-            Comment ça marche
+            {h.badge}
           </div>
           <h2 className="text-3xl md:text-5xl font-black mb-4">
-            Aussi simple que{' '}
+            {h.title}{' '}
             <span className="text-gradient-brand">1, 2, 3</span>
           </h2>
           <p className="text-white/45 max-w-lg mx-auto text-base">
-            De zéro à 100 candidatures envoyées en moins de 5 minutes.
+            {h.sub}
           </p>
         </motion.div>
 
