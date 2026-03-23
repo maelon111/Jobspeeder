@@ -66,13 +66,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: SITE_URL,
     siteName: 'JobSpeeder',
-    images: [{ url: `${SITE_URL}/opengraph-image`, width: 1200, height: 630, alt: 'JobSpeeder' }],
+    images: [{ url: `${SITE_URL}/og-image.png`, width: 1200, height: 630, alt: 'JobSpeeder' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'JobSpeeder — Postulez à 100 offres pendant que vous dormez',
     description: "Candidatures automatiques par IA.",
-    images: [`${SITE_URL}/opengraph-image`],
+    images: [`${SITE_URL}/og-image.png`],
   },
 }
 
