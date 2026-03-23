@@ -55,8 +55,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       >
         {/* Logo */}
         <div className="px-5 py-5 border-b border-white/[0.06]">
-          <Link href="/dashboard">
-            <Image src="/logo-v2.png" alt="JobSpeeder" width={120} height={35} className="h-8 w-auto object-contain" priority />
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <Image src="/logo-v2.png" alt="JobSpeeder" width={32} height={32} className="h-8 w-8 object-contain" priority />
+            <span className="text-white text-sm font-bold">JobSpeeder</span>
           </Link>
         </div>
 
