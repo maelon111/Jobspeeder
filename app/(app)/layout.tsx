@@ -2,7 +2,8 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Zap, LayoutDashboard, FileText, Bot, Settings, LogOut, ChevronRight, Menu, ChevronDown, Briefcase, CreditCard } from 'lucide-react'
+import { LayoutDashboard, FileText, Bot, Settings, LogOut, ChevronRight, Menu, ChevronDown, Briefcase, CreditCard } from 'lucide-react'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
 import { Footer } from '@/components/Footer'
@@ -54,11 +55,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       >
         {/* Logo */}
         <div className="px-5 py-5 border-b border-white/[0.06]">
-          <Link href="/dashboard" className="inline-flex items-center gap-2.5 font-bold group">
-            <div className="p-1.5 bg-brand rounded-xl group-hover:bg-brand-dark transition-colors">
-              <Zap size={15} className="text-black fill-current" />
-            </div>
-            <span className="text-white text-sm">JobSpeeder</span>
+          <Link href="/dashboard">
+            <Image src="/logo-v2.png" alt="JobSpeeder" width={120} height={35} className="h-8 w-auto object-contain" priority />
           </Link>
         </div>
 
