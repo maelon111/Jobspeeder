@@ -38,7 +38,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { href: '/applications', label: tr.nav.applications, icon: Bot },
     { href: '/job-offers', label: tr.nav.jobOffers, icon: Briefcase },
     { href: '/cv', label: tr.nav.cv, icon: FileText },
-    { href: '/coachs', label: tr.nav.coaches, icon: GraduationCap },
+    { href: '/coachs', label: 'Coachs', icon: GraduationCap },
     { href: '/ats-plus', label: 'ATS+', icon: Sparkles },
     { href: '/settings', label: tr.nav.settings, icon: Settings },
   ]
