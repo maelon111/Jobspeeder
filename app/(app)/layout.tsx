@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { LayoutDashboard, FileText, Bot, Settings, LogOut, ChevronRight, Menu, ChevronDown, Briefcase, CreditCard } from 'lucide-react'
+import { LayoutDashboard, FileText, Bot, Settings, LogOut, ChevronRight, Menu, ChevronDown, Briefcase, CreditCard, GraduationCap, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
@@ -38,6 +38,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { href: '/applications', label: tr.nav.applications, icon: Bot },
     { href: '/job-offers', label: tr.nav.jobOffers, icon: Briefcase },
     { href: '/cv', label: tr.nav.cv, icon: FileText },
+    { href: '/coachs', label: tr.nav.coaches, icon: GraduationCap },
+    { href: '/ats-plus', label: 'ATS+', icon: Sparkles },
     { href: '/settings', label: tr.nav.settings, icon: Settings },
   ]
 
