@@ -263,6 +263,7 @@ export default function ATSPlusPage() {
       }
 
       const data: ATSResult = await res.json()
+      console.log('[ats-plus] data received:', JSON.stringify(data))
       setResult(data)
 
     } catch {
