@@ -62,7 +62,10 @@ export async function POST(request: NextRequest) {
     }
 
     const raw = await response.json()
-    const result = Array.isArray(raw) ? raw[0] : raw
+    const item = Array.isArray(raw) ? raw[0] : raw
+    // n8n wraps items as { json: {...} } internally — unwrap if needed
+    const result = item?.json ?? item
+    console.log('[ats-analysis] result keys:', Object.keys(result ?? {}))
     return NextResponse.json(result)
 
   } catch (error) {
