@@ -35,13 +35,39 @@ function Toast({ message, type = 'success' }: { message: string; type?: 'success
   )
 }
 
+// Read draft synchronously to avoid render/effect race conditions
+function readDraft() {
+  if (typeof window === 'undefined') return null
+  try {
+    const saved = localStorage.getItem(LOCALSTORAGE_KEY)
+    return saved ? JSON.parse(saved) : null
+  } catch {
+    return null
+  }
+}
+
 export default function CVBuilderPage() {
-  const [step, setStep] = useState<Step>('entry')
-  const [data, setData] = useState<ResumeData>(EMPTY_RESUME)
-  const [template, setTemplate] = useState<TemplateType>('modern')
-  const [primaryColor, setPrimaryColor] = useState('#7c3aed')
+  const [step, setStep] = useState<Step>(() => {
+    const draft = readDraft()
+    return draft?.fromAts ? 'builder' : 'entry'
+  })
+  const [data, setData] = useState<ResumeData>(() => {
+    const draft = readDraft()
+    return draft?.data ?? EMPTY_RESUME
+  })
+  const [template, setTemplate] = useState<TemplateType>(() => {
+    const draft = readDraft()
+    return draft?.template ?? 'modern'
+  })
+  const [primaryColor, setPrimaryColor] = useState<string>(() => {
+    const draft = readDraft()
+    return draft?.primaryColor ?? '#7c3aed'
+  })
   const [mobileTab, setMobileTab] = useState<MobileTab>('edit')
-  const [resumeId, setResumeId] = useState<string | null>(null)
+  const [resumeId, setResumeId] = useState<string | null>(() => {
+    const draft = readDraft()
+    return draft?.resumeId ?? null
+  })
   const [userId, setUserId] = useState<string | undefined>(undefined)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
@@ -62,20 +88,13 @@ export default function CVBuilderPage() {
     })
   }, [])
 
-  // Load from localStorage
+  // Clear fromAts flag after first load so next visit starts normally
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LOCALSTORAGE_KEY)
       if (saved) {
         const parsed = JSON.parse(saved)
-        if (parsed.data) setData(parsed.data)
-        if (parsed.template) setTemplate(parsed.template)
-        if (parsed.primaryColor) setPrimaryColor(parsed.primaryColor)
-        if (parsed.resumeId) setResumeId(parsed.resumeId)
-        // Jump directly to builder when coming from ATS+ analysis
         if (parsed.fromAts) {
-          setStep('builder')
-          // Clear the flag so next visit starts normally
           localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify({ ...parsed, fromAts: false }))
         }
       }
