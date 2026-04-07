@@ -1,9 +1,10 @@
 'use client'
 import { useState, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sparkles, Upload, FileText, X, CheckCircle2, XCircle,
-  AlertCircle, Copy, Check, ChevronDown, ChevronUp, Loader2
+  AlertCircle, Copy, Check, ChevronDown, ChevronUp, Loader2, ArrowRight
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
@@ -205,6 +206,7 @@ function RewriteCards({ rewrites }: { rewrites: Rewrite[] }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ATSPlusPage() {
+  const router = useRouter()
   const [cvFile, setCvFile] = useState<File | null>(null)
   const [jobOffer, setJobOffer] = useState('')
   const [isDragging, setIsDragging] = useState(false)
@@ -275,6 +277,47 @@ export default function ATSPlusPage() {
   }
 
   const canSubmit = !!cvFile && jobOffer.trim().length >= 100 && !loading
+
+  function handleGoToBuilder() {
+    if (!result) return
+
+    // Build skills from missing keywords
+    const skills = (result.keywords_missing ?? []).map((kw, i) => ({
+      id: `ats-skill-${i}`,
+      name: kw,
+      level: 'débutant' as const,
+    }))
+
+    // Build certifications from missing keywords that look like certifications
+    const certKeywords = (result.keywords_missing ?? []).filter((kw) =>
+      /certif|cbap|uml|bpmn|pmp|scrum|aws|azure|gcp|prince/i.test(kw)
+    )
+    const certifications = certKeywords.map((kw, i) => ({
+      id: `ats-cert-${i}`,
+      title: kw,
+      organization: '',
+      date: '',
+    }))
+
+    // Use the improved version of the first rewrite as the new summary
+    const summary = result.rewrites?.[0]?.improved ?? ''
+
+    const draft = {
+      data: {
+        personal: { name: '', title: '', email: '', phone: '', city: '', linkedin: '', github: '' },
+        summary,
+        experiences: [],
+        education: [],
+        skills,
+        languages: [],
+        certifications,
+      },
+      fromAts: true,
+    }
+
+    localStorage.setItem('jobspeeder_cv_draft', JSON.stringify(draft))
+    router.push('/cv-builder')
+  }
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
@@ -493,8 +536,31 @@ export default function ATSPlusPage() {
               </div>
             )}
 
+            {/* CTA builder */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.04] p-6 flex flex-col sm:flex-row items-center gap-4"
+            >
+              <div className="flex-1 text-center sm:text-left">
+                <p className="text-white/80 text-sm font-semibold mb-1">Prêt à optimiser votre CV ?</p>
+                <p className="text-white/40 text-xs leading-relaxed">
+                  Les mots-clés manquants et les reformulations sont pré-remplis dans le builder — il ne reste plus qu&apos;à compléter vos informations.
+                </p>
+              </div>
+              <Button
+                onClick={handleGoToBuilder}
+                className="flex-shrink-0 gap-2 px-6 py-2.5 font-bold text-sm"
+              >
+                <Sparkles size={14} />
+                Créer mon CV optimisé
+                <ArrowRight size={14} />
+              </Button>
+            </motion.div>
+
             {/* CTA reset */}
-            <div className="pt-2 pb-4 flex justify-center">
+            <div className="pb-4 flex justify-center">
               <button
                 onClick={() => { setResult(null); setCvFile(null); setJobOffer('') }}
                 className="text-white/30 hover:text-white/60 text-sm transition-colors"
