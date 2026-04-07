@@ -15,12 +15,12 @@ type Rewrite = { original: string; improved: string; reason: string }
 
 type ATSResult = {
   ats_score: number
-  label: string
-  keywords_found: string[]
-  keywords_missing: string[]
-  section_tips: SectionTip[]
-  rewrites: Rewrite[]
-  summary: string
+  label?: string
+  keywords_found?: string[]
+  keywords_missing?: string[]
+  section_tips?: SectionTip[]
+  rewrites?: Rewrite[]
+  summary?: string
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -89,8 +89,9 @@ function ScoreGauge({ score }: { score: number }) {
   )
 }
 
-function KeywordPills({ keywords, type }: { keywords: string[]; type: 'found' | 'missing' }) {
+function KeywordPills({ keywords, type }: { keywords?: string[]; type: 'found' | 'missing' }) {
   const isFound = type === 'found'
+  const list = keywords ?? []
   return (
     <div>
       <div className="flex items-center gap-2 mb-3">
@@ -98,11 +99,11 @@ function KeywordPills({ keywords, type }: { keywords: string[]; type: 'found' | 
           ? <CheckCircle2 size={14} className="text-emerald-400" />
           : <XCircle size={14} className="text-red-400" />}
         <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">
-          {isFound ? `Présents (${keywords.length})` : `Manquants — le GAP (${keywords.length})`}
+          {isFound ? `Présents (${list.length})` : `Manquants — le GAP (${list.length})`}
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
-        {keywords.map((kw) => (
+        {list.map((kw) => (
           <span
             key={kw}
             className={cn(
@@ -115,7 +116,7 @@ function KeywordPills({ keywords, type }: { keywords: string[]; type: 'found' | 
             {isFound ? '✓' : '✗'} {kw}
           </span>
         ))}
-        {keywords.length === 0 && (
+        {list.length === 0 && (
           <span className="text-white/25 text-xs italic">Aucun</span>
         )}
       </div>
