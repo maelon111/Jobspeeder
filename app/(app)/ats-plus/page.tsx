@@ -477,7 +477,7 @@ export default function ATSPlusPage() {
             </div>
 
             {/* Section tips */}
-            {result.section_tips?.length > 0 && (
+            {(result.section_tips?.length ?? 0) > 0 && (
               <div>
                 <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-3">Analyse par section</p>
                 <SectionTips tips={result.section_tips!} />
@@ -485,7 +485,7 @@ export default function ATSPlusPage() {
             )}
 
             {/* Rewrites */}
-            {result.rewrites?.length > 0 && (
+            {(result.rewrites?.length ?? 0) > 0 && (
               <div>
                 <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-3">Reformulations suggérées</p>
                 <RewriteCards rewrites={result.rewrites!} />
