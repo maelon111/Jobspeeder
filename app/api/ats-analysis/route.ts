@@ -63,10 +63,22 @@ export async function POST(request: NextRequest) {
 
     const raw = await response.json()
     const item = Array.isArray(raw) ? raw[0] : raw
-    // n8n wraps items as { json: {...} } internally — unwrap if needed
     const result = item?.json ?? item
-    console.log('[ats-analysis] result keys:', Object.keys(result ?? {}))
-    return NextResponse.json(result)
+
+    // Normalize: n8n may return comma-separated strings instead of arrays
+    const toArray = (v: unknown): string[] => {
+      if (Array.isArray(v)) return v
+      if (typeof v === 'string' && v.length > 0) return v.split(',').map((s) => s.trim())
+      return []
+    }
+
+    const normalized = {
+      ...result,
+      keywords_found: toArray(result.keywords_found),
+      keywords_missing: toArray(result.keywords_missing),
+    }
+
+    return NextResponse.json(normalized)
 
   } catch (error) {
     console.error('[ats-analysis] error:', error)
