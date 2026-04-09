@@ -4,15 +4,16 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, Edit3, CheckCircle2 } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 
-import { EntryChoice } from '@/components/cv-builder/EntryChoice'
+import { EntryChoice, SavedResume } from '@/components/cv-builder/EntryChoice'
 import { CVUploader } from '@/components/cv-builder/CVUploader'
 import { ResumeForm } from '@/components/cv-builder/ResumeForm'
 import { ResumePreview } from '@/components/cv-builder/ResumePreview'
 import { TemplateSelector } from '@/components/cv-builder/TemplateSelector'
+import { TemplatePickerScreen } from '@/components/cv-builder/TemplatePickerScreen'
 import { ExportButtons } from '@/components/cv-builder/ExportButtons'
 import { ResumeData, TemplateType, EMPTY_RESUME } from '@/types/resume'
 
-type Step = 'entry' | 'import' | 'builder'
+type Step = 'entry' | 'import' | 'template-select' | 'builder'
 type MobileTab = 'edit' | 'preview'
 
 const LOCALSTORAGE_KEY = 'jobspeeder_cv_draft'
@@ -35,7 +36,6 @@ function Toast({ message, type = 'success' }: { message: string; type?: 'success
   )
 }
 
-// Read draft synchronously to avoid render/effect race conditions
 function readDraft() {
   if (typeof window === 'undefined') return null
   try {
@@ -63,6 +63,14 @@ export default function CVBuilderPage() {
     const draft = readDraft()
     return draft?.primaryColor ?? '#7c3aed'
   })
+  const [roundedPhoto, setRoundedPhoto] = useState<boolean>(() => {
+    const draft = readDraft()
+    return draft?.roundedPhoto ?? true
+  })
+  const [photoPosition, setPhotoPosition] = useState<number>(() => {
+    const draft = readDraft()
+    return draft?.photoPosition ?? 20
+  })
   const [mobileTab, setMobileTab] = useState<MobileTab>('edit')
   const [resumeId, setResumeId] = useState<string | null>(() => {
     const draft = readDraft()
@@ -71,6 +79,7 @@ export default function CVBuilderPage() {
   const [userId, setUserId] = useState<string | undefined>(undefined)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [savedResumes, setSavedResumes] = useState<SavedResume[]>([])
   const autoSaveRef = useRef<NodeJS.Timeout | null>(null)
 
   const supabase = createBrowserClient(
@@ -88,7 +97,16 @@ export default function CVBuilderPage() {
     })
   }, [])
 
-  // Clear fromAts flag after first load so next visit starts normally
+  // Load saved resumes when on entry step
+  useEffect(() => {
+    if (step !== 'entry') return
+    fetch('/api/cv/list')
+      .then(r => r.ok ? r.json() : { resumes: [] })
+      .then(d => setSavedResumes(d.resumes ?? []))
+      .catch(() => {})
+  }, [step])
+
+  // Clear fromAts flag after first load
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LOCALSTORAGE_KEY)
@@ -104,7 +122,7 @@ export default function CVBuilderPage() {
   // Persist to localStorage
   useEffect(() => {
     if (step === 'builder') {
-      localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify({ data, template, primaryColor, resumeId }))
+      localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify({ data, template, primaryColor, resumeId, roundedPhoto, photoPosition }))
     }
   }, [data, template, primaryColor, resumeId, step])
 
@@ -116,7 +134,7 @@ export default function CVBuilderPage() {
       handleSave(true)
     }, 30000)
     return () => { if (autoSaveRef.current) clearInterval(autoSaveRef.current) }
-  }, [isLoggedIn, step, data, template, primaryColor, resumeId])
+  }, [isLoggedIn, step, data, template, primaryColor, resumeId, roundedPhoto, photoPosition])
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -147,20 +165,53 @@ export default function CVBuilderPage() {
 
   const handleImportComplete = useCallback((imported: ResumeData) => {
     setData(imported)
-    setStep('builder')
-    showToast('CV importé avec succès — vérifiez et complétez les informations')
+    setStep('template-select')
+    showToast('CV importé avec succès — choisissez maintenant votre template')
   }, [showToast])
 
   const handleLoginRequired = useCallback(() => {
     showToast('Connectez-vous pour sauvegarder votre CV', 'error')
   }, [showToast])
 
+  const handleResumeEdit = useCallback(async (resume: SavedResume) => {
+    try {
+      const r = await fetch(`/api/cv/get?id=${resume.id}`)
+      if (!r.ok) throw new Error()
+      const json = await r.json()
+      setData(json.content)
+      setTemplate(resume.template)
+      setPrimaryColor(resume.primary_color)
+      setResumeId(resume.id)
+      setStep('builder')
+    } catch {
+      showToast('Erreur lors du chargement', 'error')
+    }
+  }, [showToast])
+
+  const handleResumeDelete = useCallback(async (id: string) => {
+    try {
+      const res = await fetch('/api/cv/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      if (!res.ok) throw new Error()
+      setSavedResumes(prev => prev.filter(r => r.id !== id))
+      showToast('CV supprimé')
+    } catch {
+      showToast('Erreur lors de la suppression', 'error')
+    }
+  }, [showToast])
+
   if (step === 'entry') {
     return (
       <>
         <EntryChoice
-          onCreateFromScratch={() => { setData(EMPTY_RESUME); setStep('builder') }}
+          onCreateFromScratch={() => { setData(EMPTY_RESUME); setResumeId(null); setStep('template-select') }}
           onImport={() => setStep('import')}
+          savedResumes={savedResumes}
+          onResumeEdit={handleResumeEdit}
+          onResumeDelete={handleResumeDelete}
         />
         <AnimatePresence>{toast && <Toast message={toast.message} type={toast.type} />}</AnimatePresence>
       </>
@@ -173,6 +224,22 @@ export default function CVBuilderPage() {
         <CVUploader
           userId={userId}
           onComplete={handleImportComplete}
+          onBack={() => setStep('entry')}
+        />
+        <AnimatePresence>{toast && <Toast message={toast.message} type={toast.type} />}</AnimatePresence>
+      </>
+    )
+  }
+
+  if (step === 'template-select') {
+    return (
+      <>
+        <TemplatePickerScreen
+          onSelect={(selectedTemplate) => {
+            setTemplate(selectedTemplate)
+            if (selectedTemplate === 'dark') setPrimaryColor('#ff7613')
+            setStep('builder')
+          }}
           onBack={() => setStep('entry')}
         />
         <AnimatePresence>{toast && <Toast message={toast.message} type={toast.type} />}</AnimatePresence>
@@ -207,8 +274,14 @@ export default function CVBuilderPage() {
       <TemplateSelector
         template={template}
         primaryColor={primaryColor}
+        photoUrl={data.personal.photo}
+        roundedPhoto={roundedPhoto}
+        photoPosition={photoPosition}
         onTemplateChange={setTemplate}
         onColorChange={setPrimaryColor}
+        onPhotoChange={(photo) => setData(d => ({ ...d, personal: { ...d.personal, photo: photo ?? undefined } }))}
+        onRoundedPhotoChange={setRoundedPhoto}
+        onPhotoPositionChange={setPhotoPosition}
       />
 
       {/* Mobile tab switcher */}
@@ -231,7 +304,6 @@ export default function CVBuilderPage() {
 
       {/* Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Form panel (desktop: always visible, mobile: tab-controlled) */}
         <div className={`
           flex-shrink-0 overflow-y-auto p-4
           md:w-[40%] md:border-r md:border-[#1e1e1e] md:block
@@ -240,13 +312,12 @@ export default function CVBuilderPage() {
           <ResumeForm data={data} onChange={setData} />
         </div>
 
-        {/* Preview panel (desktop: always visible, mobile: tab-controlled) */}
         <div className={`
           flex-1 overflow-hidden
           md:block
           ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}
         `}>
-          <ResumePreview data={data} template={template} primaryColor={primaryColor} />
+          <ResumePreview data={data} template={template} primaryColor={primaryColor} roundedPhoto={roundedPhoto} photoPosition={photoPosition} />
         </div>
       </div>
 

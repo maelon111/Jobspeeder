@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { BLOG_POSTS } from '@/lib/blog-posts'
+import { getAllPosts } from '@/lib/blog-db'
 
 const SITE_URL = 'https://jobspeeder.online'
 
@@ -14,7 +14,9 @@ const DATES = {
   legal:     '2025-12-01',
 }
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const dynamic = 'force-dynamic'
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     // ── Core landing / conversion pages (highest priority) ──────
     {
@@ -73,8 +75,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]
 
-  // ── Blog posts (individual articles) ──────────────────────────
-  const blogPages: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => ({
+  // ── Blog posts (individual articles — fetched dynamically from Supabase) ──
+  const dbPosts = await getAllPosts()
+  const blogPages: MetadataRoute.Sitemap = dbPosts.map((post) => ({
     url: `${SITE_URL}/blog/${post.slug}`,
     lastModified: post.updatedAt,
     changeFrequency: 'monthly' as const,

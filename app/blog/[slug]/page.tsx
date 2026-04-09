@@ -3,20 +3,12 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Clock, ArrowRight, ArrowLeft, Zap, Tag } from 'lucide-react'
 import { JsonLd } from '@/components/JsonLd'
-import {
-  BLOG_POSTS,
-  getPostBySlug,
-  getRelatedPosts,
-  formatDate,
-  type ContentBlock,
-} from '@/lib/blog-posts'
+import { formatDate, type ContentBlock } from '@/lib/blog-posts'
+import { getPostBySlug, getRelatedPosts } from '@/lib/blog-db'
+
+export const dynamic = 'force-dynamic'
 
 const SITE_URL = 'https://jobspeeder.online'
-
-/* ─── Static params ─── */
-export function generateStaticParams() {
-  return BLOG_POSTS.map((post) => ({ slug: post.slug }))
-}
 
 /* ─── Metadata ─── */
 export async function generateMetadata({
@@ -25,7 +17,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const post = getPostBySlug(slug)
+  const post = await getPostBySlug(slug)
   if (!post) return {}
 
   const postUrl = `${SITE_URL}/blog/${post.slug}`
@@ -135,10 +127,10 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const post = getPostBySlug(slug)
+  const post = await getPostBySlug(slug)
   if (!post) notFound()
 
-  const related = getRelatedPosts(post.slug)
+  const related = await getRelatedPosts(post.slug)
   const postUrl = `${SITE_URL}/blog/${post.slug}`
   const catColor = getCategoryColor(post.categorySlug)
 

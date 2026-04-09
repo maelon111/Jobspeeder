@@ -1,6 +1,5 @@
 'use client'
 import { useState, useRef, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sparkles, Upload, FileText, X, CheckCircle2, XCircle,
@@ -206,7 +205,6 @@ function RewriteCards({ rewrites }: { rewrites: Rewrite[] }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ATSPlusPage() {
-  const router = useRouter()
   const [cvFile, setCvFile] = useState<File | null>(null)
   const [jobOffer, setJobOffer] = useState('')
   const [isDragging, setIsDragging] = useState(false)
@@ -316,7 +314,7 @@ export default function ATSPlusPage() {
     }
 
     localStorage.setItem('jobspeeder_cv_draft', JSON.stringify(draft))
-    router.push('/cv-builder')
+    window.open('/cv-builder', '_blank')
   }
 
   return (

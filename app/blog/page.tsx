@@ -2,7 +2,10 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Clock, ArrowRight, Zap } from 'lucide-react'
 import { JsonLd } from '@/components/JsonLd'
-import { BLOG_POSTS, CATEGORIES, formatDate } from '@/lib/blog-posts'
+import { CATEGORIES, formatDate } from '@/lib/blog-posts'
+import { getAllPosts } from '@/lib/blog-db'
+
+export const dynamic = 'force-dynamic'
 
 const SITE_URL = 'https://jobspeeder.online'
 
@@ -19,31 +22,6 @@ export const metadata: Metadata = {
     type: 'website',
     images: [{ url: `${SITE_URL}/logo-v2.png` }],
   },
-}
-
-const blogSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'Blog',
-  name: 'Blog JobSpeeder',
-  url: `${SITE_URL}/blog`,
-  description:
-    'Guides pratiques pour accélérer votre recherche d\'emploi avec l\'IA et l\'automatisation.',
-  publisher: {
-    '@type': 'Organization',
-    name: 'JobSpeeder',
-    url: SITE_URL,
-    logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo-v2.png` },
-  },
-  blogPost: BLOG_POSTS.map((post) => ({
-    '@type': 'BlogPosting',
-    headline: post.title,
-    url: `${SITE_URL}/blog/${post.slug}`,
-    datePublished: post.publishedAt,
-    dateModified: post.updatedAt,
-    description: post.excerpt,
-    author: { '@type': 'Organization', name: post.author },
-    keywords: post.tags.join(', '),
-  })),
 }
 
 const breadcrumbSchema = {
@@ -67,7 +45,34 @@ function getCategoryColor(slug: string) {
   return CATEGORY_COLORS[slug] ?? 'text-white/50 bg-white/5 border-white/10'
 }
 
-export default function BlogIndexPage() {
+export default async function BlogIndexPage() {
+  const posts = await getAllPosts()
+
+  const blogSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'Blog JobSpeeder',
+    url: `${SITE_URL}/blog`,
+    description:
+      'Guides pratiques pour accélérer votre recherche d\'emploi avec l\'IA et l\'automatisation.',
+    publisher: {
+      '@type': 'Organization',
+      name: 'JobSpeeder',
+      url: SITE_URL,
+      logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo-v2.png` },
+    },
+    blogPost: posts.map((post) => ({
+      '@type': 'BlogPosting',
+      headline: post.title,
+      url: `${SITE_URL}/blog/${post.slug}`,
+      datePublished: post.publishedAt,
+      dateModified: post.updatedAt,
+      description: post.excerpt,
+      author: { '@type': 'Organization', name: post.author },
+      keywords: post.tags.join(', '),
+    })),
+  }
+
   return (
     <>
       <JsonLd data={blogSchema} />
@@ -110,7 +115,7 @@ export default function BlogIndexPage() {
 
           {/* Posts grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {BLOG_POSTS.map((post) => {
+            {posts.map((post) => {
               const catColor = getCategoryColor(post.categorySlug)
               return (
                 <Link
