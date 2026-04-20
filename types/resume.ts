@@ -56,7 +56,7 @@ export interface ResumeData {
   certifications: Certification[]
 }
 
-export type TemplateType = 'modern' | 'minimal' | 'creative' | 'dark'
+export type TemplateType = 'modern' | 'minimal' | 'dark' | 'classic' | 'creative' | 'model-25' | 'standard' | 'standard-pro' | 'standard-premium'
 
 export const PRESET_COLORS = [
   { label: 'Violet', value: '#7c3aed' },

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import Image from 'next/image'
 import { Mail, Lock, Play } from 'lucide-react'
+import { BlobBackground } from '@/components/BlobBackground'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [demoLoading, setDemoLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
 
   async function handleLogin(e: React.FormEvent) {
@@ -66,22 +68,23 @@ export default function LoginPage() {
   }
 
   async function handleGoogleLogin() {
+    setGoogleLoading(true)
+    setError('')
     const supabase = createClient()
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=/dashboard` },
     })
+    if (error) {
+      setError('Erreur Google : ' + error.message)
+      setGoogleLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-[#060c16] flex items-center justify-center px-4">
-      {/* Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-brand/5 rounded-full blur-[100px]" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-blue-500/4 rounded-full blur-[80px]" />
-      </div>
-
-      <div className="relative w-full max-w-sm">
+      <BlobBackground />
+      <div className="relative z-10 w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center mb-4 group">
@@ -122,7 +125,8 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white/[0.04] border border-white/10 rounded-xl text-sm font-medium text-white/70 hover:bg-white/8 hover:text-white hover:border-white/18 transition-all duration-150 mb-4"
+            disabled={googleLoading}
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white/[0.04] border border-white/10 rounded-xl text-sm font-medium text-white/70 hover:bg-white/8 hover:text-white hover:border-white/18 transition-all duration-150 mb-4 disabled:opacity-50"
           >
             <svg width="16" height="16" viewBox="0 0 18 18">
               <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
@@ -130,7 +134,7 @@ export default function LoginPage() {
               <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
               <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
             </svg>
-            Continuer avec Google
+            {googleLoading ? 'Redirection...' : 'Continuer avec Google'}
           </button>
 
           {/* Divider */}

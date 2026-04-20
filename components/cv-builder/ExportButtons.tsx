@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { Download, FileText, Save, Loader2 } from 'lucide-react'
+import { Download, Save, Loader2, Package, Link2, Check } from 'lucide-react'
 import { ResumeData, TemplateType } from '@/types/resume'
 
 function buildFilename(data: ResumeData, ext: string): string {
@@ -20,15 +20,20 @@ interface ExportButtonsProps {
   data: ResumeData
   template: TemplateType
   primaryColor: string
+  photoSize: number
+  photoPositionX: number
+  photoContainerSize: number
   isLoggedIn: boolean
+  resumeId: string | null
   onSave: () => Promise<void>
   onLoginRequired: () => void
 }
 
-export function ExportButtons({ data, template, primaryColor, isLoggedIn, onSave, onLoginRequired }: ExportButtonsProps) {
+export function ExportButtons({ data, template, primaryColor, photoSize, photoPositionX, photoContainerSize, isLoggedIn, resumeId, onSave, onLoginRequired }: ExportButtonsProps) {
   const [loadingPdf, setLoadingPdf] = useState(false)
-  const [loadingDocx, setLoadingDocx] = useState(false)
+  const [loadingPack, setLoadingPack] = useState(false)
   const [loadingSave, setLoadingSave] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const validate = () => {
     if (!data.personal.name || !data.personal.email) {
@@ -45,9 +50,9 @@ export function ExportButtons({ data, template, primaryColor, isLoggedIn, onSave
       const res = await fetch('/api/cv/export-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data, template, primaryColor }),
+        body: JSON.stringify({ data, template, primaryColor, photoSize, photoPositionX, photoContainerSize }),
       })
-      if (!res.ok) throw new Error('Erreur génération PDF')
+      if (!res.ok) throw new Error()
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -62,27 +67,30 @@ export function ExportButtons({ data, template, primaryColor, isLoggedIn, onSave
     }
   }
 
-  const downloadDocx = async () => {
+  const downloadPack = async () => {
     if (!validate()) return
-    setLoadingDocx(true)
+    setLoadingPack(true)
     try {
-      const res = await fetch('/api/cv/export-docx', {
+      const res = await fetch('/api/cv/export-pack', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data, primaryColor, template }),
+        body: JSON.stringify({ data, photoSize, photoPositionX }),
       })
-      if (!res.ok) throw new Error('Erreur génération Word')
+      if (!res.ok) throw new Error()
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = buildFilename(data, 'docx')
+      const nameSlug = data.personal.name
+        ? data.personal.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '_')
+        : 'CV'
+      a.download = `Pack_CV_${nameSlug}_${new Date().toISOString().slice(0, 10)}.zip`
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      alert('Erreur lors de la génération du fichier Word.')
+      alert('Erreur lors de la génération du pack.')
     } finally {
-      setLoadingDocx(false)
+      setLoadingPack(false)
     }
   }
 
@@ -99,33 +107,66 @@ export function ExportButtons({ data, template, primaryColor, isLoggedIn, onSave
     }
   }
 
-  const btnBase = 'flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+  const handleCopyLink = async () => {
+    if (!resumeId) {
+      alert('Sauvegardez d\'abord votre CV pour obtenir un lien partageable.')
+      return
+    }
+    const link = `${window.location.origin}/cv/${resumeId}`
+    try {
+      await navigator.clipboard.writeText(link)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      prompt('Copiez ce lien :', link)
+    }
+  }
+
+  const btnBase = 'flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2">
       <button
         onClick={downloadPdf}
         disabled={loadingPdf}
         className={`${btnBase} bg-violet-600 hover:bg-violet-500 text-white`}
       >
         {loadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-        PDF
+        <span className="hidden sm:inline">Télécharger CV</span>
       </button>
+
       <button
-        onClick={downloadDocx}
-        disabled={loadingDocx}
-        className={`${btnBase} bg-[#1e4db0] hover:bg-[#1a44a3] text-white`}
+        onClick={downloadPack}
+        disabled={loadingPack}
+        title="5 CVs : 2 templates Moderne (violet, bleu) + Minimaliste (vert) + Créatif (orange) + Dark (orange)"
+        className={`${btnBase} bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 text-white`}
       >
-        {loadingDocx ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-        Word
+        {loadingPack ? <Loader2 className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />}
+        <span className="hidden sm:inline">{loadingPack ? 'Génération…' : 'Pack 5 CV'}</span>
       </button>
+
       <button
         onClick={handleSave}
         disabled={loadingSave}
         className={`${btnBase} bg-[#1a1a1a] hover:bg-[#222] border border-[#333] text-white`}
       >
         {loadingSave ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-        Sauvegarder
+        <span className="hidden sm:inline">Sauvegarder</span>
+      </button>
+
+      <button
+        onClick={handleCopyLink}
+        title={resumeId ? 'Copier le lien de partage' : 'Sauvegardez d\'abord votre CV'}
+        className={`${btnBase} border transition-colors ${
+          copied
+            ? 'bg-emerald-600/20 border-emerald-500 text-emerald-400'
+            : resumeId
+              ? 'bg-[#1a1a1a] hover:bg-[#222] border-[#333] text-gray-300 hover:text-white'
+              : 'bg-[#111] border-[#222] text-gray-600 cursor-not-allowed'
+        }`}
+      >
+        {copied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
+        <span className="hidden sm:inline">{copied ? 'Copié !' : 'Partager'}</span>
       </button>
     </div>
   )

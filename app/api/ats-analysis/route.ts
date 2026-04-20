@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getUserPlan } from '@/lib/get-user-plan'
 
 const ATS_WEBHOOK_URL = process.env.N8N_ATS_WEBHOOK_URL
 
@@ -21,12 +23,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'cv_file and job_offer are required' }, { status: 400 })
     }
 
-    // Upload CV to Supabase Storage
+    // Upload CV to Supabase Storage (fixed path per user — delete old files first)
     const fileExt = cvFile.name.split('.').pop()
-    const filePath = `ats/${user.id}/${Date.now()}.${fileExt}`
+    const filePath = `ats/${user.id}/cv.${fileExt}`
     const arrayBuffer = await cvFile.arrayBuffer()
+    const adminStorage = createAdminClient()
 
-    const { error: uploadError } = await supabase.storage
+    // Delete all previous CVs for this user to avoid accumulation
+    const { data: existing } = await adminStorage.storage.from('campaign-cvs').list(`ats/${user.id}`)
+    if (existing && existing.length > 0) {
+      await adminStorage.storage.from('campaign-cvs').remove(existing.map(f => `ats/${user.id}/${f.name}`))
+    }
+
+    const { error: uploadError } = await adminStorage.storage
       .from('campaign-cvs')
       .upload(filePath, Buffer.from(arrayBuffer), {
         contentType: cvFile.type,
@@ -38,15 +47,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to upload CV' }, { status: 500 })
     }
 
-    const { data: { publicUrl: cvUrl } } = supabase.storage
+    const { data: { publicUrl: cvUrl } } = adminStorage.storage
       .from('campaign-cvs')
       .getPublicUrl(filePath)
 
+    const planInfo = await getUserPlan(supabase, user.id)
     const payload = {
       user_id: user.id,
       cv_filename: cvFile.name,
       cv_url: cvUrl,
       job_offer: jobOffer.trim(),
+      _plan: planInfo.plan,
+      _plan_status: planInfo.status,
+      _billing_period: planInfo.billing_period,
+      _plan_expires_at: planInfo.current_period_end,
     }
 
     const response = await fetch(ATS_WEBHOOK_URL, {
@@ -64,6 +78,18 @@ export async function POST(request: NextRequest) {
     const raw = await response.json()
     const item = Array.isArray(raw) ? raw[0] : raw
     const result = item?.json ?? item
+
+    if (result?.error === 'quota_exceeded') {
+      return NextResponse.json(
+        {
+          error: 'quota_exceeded',
+          message: result.message,
+          quota_used: result.quota_used,
+          quota_limit: result.quota_limit,
+        },
+        { status: 429 }
+      )
+    }
 
     // Normalize: n8n may return comma-separated strings instead of arrays
     const toArray = (v: unknown): string[] => {

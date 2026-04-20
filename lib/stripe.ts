@@ -22,10 +22,14 @@ export const stripe = new Proxy({} as Stripe, {
   },
 })
 
-export type PlanId = 'gold' | 'platinum' | 'elite'
+export type PlanId = 'decouverte' | 'gold' | 'platinum' | 'elite'
 export type BillingPeriod = 'monthly' | 'annual'
 
 export const PRICE_IDS: Record<PlanId, Record<BillingPeriod, string>> = {
+  decouverte: {
+    monthly: process.env.STRIPE_PRICE_DECOUVERTE_MONTHLY!,
+    annual: process.env.STRIPE_PRICE_DECOUVERTE_ANNUAL!,
+  },
   gold: {
     monthly: process.env.STRIPE_PRICE_GOLD_MONTHLY!,
     annual: process.env.STRIPE_PRICE_GOLD_ANNUAL!,

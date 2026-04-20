@@ -28,8 +28,14 @@ export async function POST(req: NextRequest) {
     )
 
     const ext = file.name.split('.').pop() ?? 'pdf'
-    const filePath = `cv-builder/${userId}/${Date.now()}.${ext}`
+    const filePath = `cv-builder/${userId}/cv.${ext}`
     const arrayBuffer = await file.arrayBuffer()
+
+    // Delete all previous CVs for this user to avoid accumulation
+    const { data: existing } = await supabase.storage.from('campaign-cvs').list(`cv-builder/${userId}`)
+    if (existing && existing.length > 0) {
+      await supabase.storage.from('campaign-cvs').remove(existing.map(f => `cv-builder/${userId}/${f.name}`))
+    }
 
     const { error: uploadError } = await supabase.storage
       .from('campaign-cvs')

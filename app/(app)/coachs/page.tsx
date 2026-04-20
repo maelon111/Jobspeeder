@@ -495,11 +495,37 @@ export default function CoachsPage() {
           <span className="ml-3 text-white/45 text-sm">Chargement...</span>
         </div>
       ) : coaches.length === 0 ? (
-        <div className="text-center py-20">
-          <GraduationCap size={40} className="text-white/20 mx-auto mb-4" />
-          <p className="text-white/45 text-sm">Aucun coach trouvé</p>
-          <p className="text-white/30 text-xs mt-1">Essayez d&apos;autres critères</p>
-        </div>
+        (search || ville || pays || service) ? (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16 px-4"
+          >
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand/10 border border-brand/20 mb-5">
+              <GraduationCap size={28} className="text-brand/60" />
+            </div>
+            <h3 className="text-white/80 font-semibold text-base mb-2">
+              Aucun coach disponible dans cette zone pour l&apos;instant
+            </h3>
+            <p className="text-white/40 text-sm leading-relaxed max-w-sm mx-auto mb-6">
+              Nos équipes sélectionnent activement les meilleurs profils selon vos critères.
+              En attendant, nos coachs en visioconférence sont disponibles dès maintenant pour vous accompagner.
+            </p>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="gap-2"
+              onClick={() => { setVille(''); setPays(''); setSearch(''); setService('') }}
+            >
+              Voir les coachs à distance
+            </Button>
+          </motion.div>
+        ) : (
+          <div className="text-center py-20">
+            <GraduationCap size={40} className="text-white/20 mx-auto mb-4" />
+            <p className="text-white/45 text-sm">Aucun coach disponible pour le moment</p>
+          </div>
+        )
       ) : (
         <>
           <p className="text-white/35 text-xs mb-4">

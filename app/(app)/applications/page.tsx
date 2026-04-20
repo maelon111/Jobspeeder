@@ -8,7 +8,7 @@ import { Modal } from '@/components/ui/Modal'
 import {
   Briefcase, Search, RefreshCw,
   ChevronLeft, ChevronRight,
-  Zap, Upload, FileText
+  Zap, Upload, FileText, Star, Crown
 } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n'
 import { useT } from '@/lib/translations'
@@ -18,6 +18,109 @@ type JobOffer = {
   entreprise_nom: string
   logo_entreprise: string | null
   date: string | null
+}
+
+const CAMPAIGN_QUOTA_COPY = {
+  fr: {
+    daily: {
+      title: 'Quota quotidien atteint',
+      subtitle: (used: number, limit: number) => `Vous avez envoyé ${used} candidature${used > 1 ? 's' : ''} aujourd'hui sur ${limit} autorisée${limit > 1 ? 's' : ''}.`,
+      usageLabel: 'Candidatures aujourd\'hui',
+    },
+    monthly: {
+      title: 'Quota mensuel atteint',
+      subtitle: (used: number, limit: number) => `Vous avez envoyé ${used} candidature${used > 1 ? 's' : ''} ce mois sur ${limit} autorisée${limit > 1 ? 's' : ''}.`,
+      usageLabel: 'Candidatures ce mois',
+    },
+    plans: { gold: 'Gold', platinum: 'Platinum', elite: 'Elite' },
+    planSubtitle: { gold: 'Jusqu\'à 30 candidatures/j', platinum: '60 candidatures/j', elite: 'Illimité' },
+    choosePlan: 'Choisir',
+    close: 'Fermer',
+  },
+  en: {
+    daily: {
+      title: 'Daily quota reached',
+      subtitle: (used: number, limit: number) => `You've sent ${used} application${used > 1 ? 's' : ''} today out of ${limit} allowed.`,
+      usageLabel: 'Applications today',
+    },
+    monthly: {
+      title: 'Monthly quota reached',
+      subtitle: (used: number, limit: number) => `You've sent ${used} application${used > 1 ? 's' : ''} this month out of ${limit} allowed.`,
+      usageLabel: 'Applications this month',
+    },
+    plans: { gold: 'Gold', platinum: 'Platinum', elite: 'Elite' },
+    planSubtitle: { gold: 'Up to 30 apps/day', platinum: '60 apps/day', elite: 'Unlimited' },
+    choosePlan: 'Choose',
+    close: 'Close',
+  },
+}
+
+const UPGRADE_PLANS_CAMPAIGN = [
+  { key: 'gold' as const,     icon: <Zap size={13} />,   color: 'from-yellow-500/20 to-yellow-600/10', border: 'border-yellow-500/25', text: 'text-yellow-400', price: '29€' },
+  { key: 'platinum' as const, icon: <Star size={13} />,  color: 'from-blue-500/20 to-blue-600/10',    border: 'border-blue-500/25',   text: 'text-blue-400',   price: '59€' },
+  { key: 'elite' as const,    icon: <Crown size={13} />, color: 'from-violet-500/20 to-violet-600/10', border: 'border-violet-500/25', text: 'text-violet-400', price: '149€' },
+]
+
+function CampaignQuotaCard({ quotaType, quotaUsed, quotaLimit, lang, onClose }: {
+  quotaType: 'daily' | 'monthly'
+  quotaUsed: number
+  quotaLimit: number
+  lang: string
+  onClose: () => void
+}) {
+  const copy = CAMPAIGN_QUOTA_COPY[lang === 'fr' ? 'fr' : 'en']
+  const section = copy[quotaType]
+
+  return (
+    <div className="space-y-5 py-2">
+      <div className="text-center space-y-1.5">
+        <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-brand/10 border border-brand/20 mb-1">
+          <Zap size={18} className="text-brand" />
+        </div>
+        <p className="text-white/90 font-bold text-base">{section.title}</p>
+        <p className="text-white/45 text-sm">{section.subtitle(quotaUsed, quotaLimit)}</p>
+      </div>
+
+      <div>
+        <div className="flex justify-between text-xs text-white/35 mb-1.5">
+          <span>{section.usageLabel}</span>
+          <span className="font-semibold text-white/60">{quotaUsed} / {quotaLimit}</span>
+        </div>
+        <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+          <div
+            className="h-full rounded-full bg-brand transition-all"
+            style={{ width: `${Math.min(100, (quotaUsed / quotaLimit) * 100)}%` }}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2.5">
+        {UPGRADE_PLANS_CAMPAIGN.map((plan) => (
+          <a
+            key={plan.key}
+            href="/pricing"
+            className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:scale-[1.02] bg-gradient-to-b ${plan.color} ${plan.border}`}
+          >
+            <span className={`flex items-center gap-1 text-xs font-bold ${plan.text}`}>{plan.icon} {copy.plans[plan.key]}</span>
+            <span className={`text-lg font-black ${plan.text}`}>{plan.price}<span className="text-xs font-medium opacity-60">/mois</span></span>
+            <span className="text-white/40 text-[10px] leading-snug">{copy.planSubtitle[plan.key]}</span>
+            <span className={`mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${plan.text} ${plan.border} bg-gradient-to-b ${plan.color}`}>
+              {copy.choosePlan} →
+            </span>
+          </a>
+        ))}
+      </div>
+
+      <div className="flex gap-3 pt-1">
+        <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white text-sm transition-colors">
+          {copy.close}
+        </button>
+        <a href="/pricing" className="flex-1 py-2.5 rounded-xl bg-brand/15 border border-brand/30 text-brand text-sm font-semibold text-center hover:bg-brand/20 transition-colors">
+          Voir les forfaits →
+        </a>
+      </div>
+    </div>
+  )
 }
 
 const CONTRACT_TYPES = ['CDI', 'CDD', 'Freelance', 'Stage']
@@ -57,6 +160,7 @@ export default function ApplicationsPage() {
   const [showCampaignModal, setShowCampaignModal] = useState(false)
   const [campaignSuccess, setCampaignSuccess] = useState(false)
   const [launching, setLaunching] = useState(false)
+  const [quotaError, setQuotaError] = useState<{ quota_type: 'daily' | 'monthly'; quota_used: number; quota_limit: number } | null>(null)
   const [campaignForm, setCampaignForm] = useState({
     cv: null as File | null,
     poste: '',
@@ -83,9 +187,9 @@ export default function ApplicationsPage() {
   }
 
   function resetCampaign() {
-    // [TASK 1] job_type réinitialisé à 'all'
     setCampaignForm({ cv: null, poste: '', ville: '', pays: '', contrat: [], mode: '', job_type: 'all', rayon: '20', salary_expectation: '', availability: 'Immédiate', work_authorization: 'Oui, sans restriction' })
     setCampaignSuccess(false)
+    setQuotaError(null)
     setShowCampaignModal(false)
   }
 
@@ -139,6 +243,12 @@ export default function ApplicationsPage() {
         }),
       })
       console.log('[campaign] step 5b: webhook status =', webhookRes.status)
+
+      if (webhookRes.status === 429) {
+        const errData = await webhookRes.json()
+        setQuotaError({ quota_type: errData.quota_type, quota_used: errData.quota_used, quota_limit: errData.quota_limit })
+        return
+      }
 
       console.log('[campaign] step 6: success')
       setCampaignSuccess(true)
@@ -288,7 +398,9 @@ export default function ApplicationsPage() {
         className="max-w-2xl"
       >
         {/* Animation robots — thème JobSpeeder (vert néon #00ff88, fond sombre, glassmorphism) */}
-        {(launching || campaignSuccess) ? (
+        {quotaError ? (
+          <CampaignQuotaCard quotaType={quotaError.quota_type} quotaUsed={quotaError.quota_used} quotaLimit={quotaError.quota_limit} lang={lang} onClose={resetCampaign} />
+        ) : (launching || campaignSuccess) ? (
           <div className="relative w-full overflow-hidden rounded-2xl text-center" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(0,255,136,0.07) 0%, transparent 65%)'}}>
             <style>{`
               @keyframes js-bob1 { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-8px)} }
@@ -572,6 +684,7 @@ export default function ApplicationsPage() {
           </div>
         ) : (
           <div className="space-y-5">
+
             {/* CV Upload */}
             <div>
               <label className="text-sm font-medium text-white/70 block mb-2">{a.cvLabel}</label>

@@ -67,9 +67,17 @@ export default function CVBuilderPage() {
     const draft = readDraft()
     return draft?.roundedPhoto ?? true
   })
-  const [photoPosition, setPhotoPosition] = useState<number>(() => {
+  const [photoSize, setPhotoSize] = useState<number>(() => {
     const draft = readDraft()
-    return draft?.photoPosition ?? 20
+    return draft?.photoSize ?? 100
+  })
+  const [photoPositionX, setPhotoPositionX] = useState<number>(() => {
+    const draft = readDraft()
+    return draft?.photoPositionX ?? 50
+  })
+  const [photoContainerSize, setPhotoContainerSize] = useState<number>(() => {
+    const draft = readDraft()
+    return draft?.photoContainerSize ?? 100
   })
   const [mobileTab, setMobileTab] = useState<MobileTab>('edit')
   const [resumeId, setResumeId] = useState<string | null>(() => {
@@ -122,9 +130,9 @@ export default function CVBuilderPage() {
   // Persist to localStorage
   useEffect(() => {
     if (step === 'builder') {
-      localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify({ data, template, primaryColor, resumeId, roundedPhoto, photoPosition }))
+      localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify({ data, template, primaryColor, resumeId, roundedPhoto, photoSize, photoPositionX, photoContainerSize }))
     }
-  }, [data, template, primaryColor, resumeId, step])
+  }, [data, template, primaryColor, resumeId, step, roundedPhoto, photoSize, photoPositionX, photoContainerSize])
 
   // Auto-save every 30s if logged in
   useEffect(() => {
@@ -134,11 +142,32 @@ export default function CVBuilderPage() {
       handleSave(true)
     }, 30000)
     return () => { if (autoSaveRef.current) clearInterval(autoSaveRef.current) }
-  }, [isLoggedIn, step, data, template, primaryColor, resumeId, roundedPhoto, photoPosition])
+  }, [isLoggedIn, step, data, template, primaryColor, resumeId, roundedPhoto, photoSize, photoPositionX, photoContainerSize])
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
     setTimeout(() => setToast(null), 3500)
+  }, [])
+
+  const TEMPLATE_PHOTO_DEFAULTS: Record<string, { containerSize: number; photoSize: number; positionX: number }> = {
+    modern:   { containerSize: 180, photoSize: 100, positionX: 40 },
+    minimal:  { containerSize: 180, photoSize: 100, positionX: 60 },
+    dark:     { containerSize: 100, photoSize: 100, positionX: 30 },
+    creative: { containerSize: 160, photoSize: 100, positionX: 60 },
+    classic:  { containerSize: 140, photoSize: 100, positionX: 50 },
+    'model-25': { containerSize: 100, photoSize: 100, positionX: 50 },
+    'standard': { containerSize: 110, photoSize: 100, positionX: 50 },
+    'standard-premium': { containerSize: 110, photoSize: 100, positionX: 50 },
+  }
+
+  const applyTemplateDefaults = useCallback((t: TemplateType) => {
+    setTemplate(t)
+    const d = TEMPLATE_PHOTO_DEFAULTS[t]
+    if (d) {
+      setPhotoContainerSize(d.containerSize)
+      setPhotoSize(d.photoSize)
+      setPhotoPositionX(d.positionX)
+    }
   }, [])
 
   const handleSave = useCallback(async (silent = false) => {
@@ -152,6 +181,7 @@ export default function CVBuilderPage() {
           template,
           primaryColor,
           content: data,
+          settings: { roundedPhoto, photoSize, photoPositionX, photoContainerSize },
         }),
       })
       const json = await res.json()
@@ -161,7 +191,7 @@ export default function CVBuilderPage() {
     } catch {
       if (!silent) showToast('Erreur lors de la sauvegarde', 'error')
     }
-  }, [data, template, primaryColor, resumeId, showToast])
+  }, [data, template, primaryColor, resumeId, roundedPhoto, photoSize, photoPositionX, photoContainerSize, showToast])
 
   const handleImportComplete = useCallback((imported: ResumeData) => {
     setData(imported)
@@ -178,10 +208,17 @@ export default function CVBuilderPage() {
       const r = await fetch(`/api/cv/get?id=${resume.id}`)
       if (!r.ok) throw new Error()
       const json = await r.json()
-      setData(json.content)
+      const { _settings, ...resumeData } = json.content
+      setData(resumeData)
       setTemplate(resume.template)
       setPrimaryColor(resume.primary_color)
       setResumeId(resume.id)
+      if (_settings) {
+        if (_settings.roundedPhoto !== undefined) setRoundedPhoto(_settings.roundedPhoto)
+        if (_settings.photoSize !== undefined) setPhotoSize(_settings.photoSize)
+        if (_settings.photoPositionX !== undefined) setPhotoPositionX(_settings.photoPositionX)
+        if (_settings.photoContainerSize !== undefined) setPhotoContainerSize(_settings.photoContainerSize)
+      }
       setStep('builder')
     } catch {
       showToast('Erreur lors du chargement', 'error')
@@ -236,8 +273,8 @@ export default function CVBuilderPage() {
       <>
         <TemplatePickerScreen
           onSelect={(selectedTemplate) => {
-            setTemplate(selectedTemplate)
-            if (selectedTemplate === 'dark') setPrimaryColor('#ff7613')
+            applyTemplateDefaults(selectedTemplate)
+            if (selectedTemplate === 'dark' || selectedTemplate === 'model-25') setPrimaryColor('#ff7613')
             setStep('builder')
           }}
           onBack={() => setStep('entry')}
@@ -250,21 +287,24 @@ export default function CVBuilderPage() {
   return (
     <div className="flex flex-col h-screen bg-[#0f0f0f] overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#1e1e1e] bg-[#111] shrink-0">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setStep('entry')}
-            className="text-gray-500 hover:text-white text-sm transition-colors"
-          >
-            ← Retour
-          </button>
-          <span className="text-white font-semibold text-sm">CV Builder</span>
-        </div>
+      <div className="flex items-center gap-4 px-4 py-3 border-b border-[#1e1e1e] bg-[#111] shrink-0">
+        <button
+          onClick={() => setStep('entry')}
+          className="text-gray-500 hover:text-white text-sm transition-colors shrink-0"
+        >
+          ← Retour
+        </button>
+        <span className="text-white font-semibold text-sm shrink-0 hidden sm:inline">CV Builder</span>
+        <div className="w-px h-5 bg-[#333] shrink-0 hidden sm:block" />
         <ExportButtons
           data={data}
           template={template}
           primaryColor={primaryColor}
+          photoSize={photoSize}
+          photoPositionX={photoPositionX}
+          photoContainerSize={photoContainerSize}
           isLoggedIn={isLoggedIn}
+          resumeId={resumeId}
           onSave={() => handleSave(false)}
           onLoginRequired={handleLoginRequired}
         />
@@ -276,12 +316,17 @@ export default function CVBuilderPage() {
         primaryColor={primaryColor}
         photoUrl={data.personal.photo}
         roundedPhoto={roundedPhoto}
-        photoPosition={photoPosition}
-        onTemplateChange={setTemplate}
+        photoPosition={50}
+        onTemplateChange={applyTemplateDefaults}
         onColorChange={setPrimaryColor}
         onPhotoChange={(photo) => setData(d => ({ ...d, personal: { ...d.personal, photo: photo ?? undefined } }))}
         onRoundedPhotoChange={setRoundedPhoto}
-        onPhotoPositionChange={setPhotoPosition}
+        photoSize={photoSize}
+        photoPositionX={photoPositionX}
+        onPhotoSizeChange={setPhotoSize}
+        onPhotoPositionXChange={setPhotoPositionX}
+        photoContainerSize={photoContainerSize}
+        onPhotoContainerSizeChange={setPhotoContainerSize}
       />
 
       {/* Mobile tab switcher */}
@@ -306,7 +351,7 @@ export default function CVBuilderPage() {
       <div className="flex flex-1 overflow-hidden">
         <div className={`
           flex-shrink-0 overflow-y-auto p-4
-          md:w-[40%] md:border-r md:border-[#1e1e1e] md:block
+          md:w-[360px] md:border-r md:border-[#1e1e1e] md:block
           ${mobileTab === 'edit' ? 'block w-full' : 'hidden'}
         `}>
           <ResumeForm data={data} onChange={setData} />
@@ -317,7 +362,7 @@ export default function CVBuilderPage() {
           md:block
           ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}
         `}>
-          <ResumePreview data={data} template={template} primaryColor={primaryColor} roundedPhoto={roundedPhoto} photoPosition={photoPosition} />
+          <ResumePreview data={data} template={template} primaryColor={primaryColor} roundedPhoto={roundedPhoto} photoPosition={50} photoSize={photoSize} photoPositionX={photoPositionX} photoContainerSize={photoContainerSize} />
         </div>
       </div>
 

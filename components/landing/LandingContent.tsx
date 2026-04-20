@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
-import { Zap, Mail } from 'lucide-react'
+import Image from 'next/image'
+import { Mail } from 'lucide-react'
 import { Navbar } from './Navbar'
 import { Hero } from './Hero'
 import { Stats } from './Stats'
@@ -8,6 +9,7 @@ import { HowItWorks } from './HowItWorks'
 import { CTA } from './CTA'
 import { useLanguage } from '@/lib/i18n'
 import { useT } from '@/lib/translations'
+import { BlobBackground } from '@/components/BlobBackground'
 
 export function LandingContent() {
   const { lang } = useLanguage()
@@ -16,6 +18,7 @@ export function LandingContent() {
 
   return (
     <div className="min-h-screen bg-[#060c16]">
+      <BlobBackground />
       <Navbar />
       <Hero />
       <Stats />
@@ -27,11 +30,8 @@ export function LandingContent() {
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6">
             <div>
-              <Link href="/" className="flex items-center gap-2 text-sm font-bold mb-1.5">
-                <div className="p-1 bg-brand rounded-lg">
-                  <Zap size={12} className="text-black fill-current" />
-                </div>
-                <span className="text-white">JobSpeeder</span>
+              <Link href="/" className="flex items-center mb-1.5">
+                <Image src="/logo-v2.png" alt="JobSpeeder" width={120} height={34} className="h-7 w-auto object-contain" />
               </Link>
               <p className="text-xs text-white/25 max-w-[200px]">
                 {lf.tagline}

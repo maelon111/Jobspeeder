@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Zap, User, FileText, Sparkles, Target, Plus, Trash2, CheckCircle } from 'lucide-react'
+import { BlobBackground } from '@/components/BlobBackground'
 import type { CVContent } from '@/types/supabase'
 
 const TOTAL_STEPS = 4
@@ -143,11 +144,8 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-[#060c16] flex items-center justify-center px-4 py-8">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand/8 rounded-full blur-3xl" />
-      </div>
-
-      <div className="relative w-full max-w-2xl">
+      <BlobBackground />
+      <div className="relative z-10 w-full max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 font-bold text-xl mb-6">
@@ -418,7 +416,7 @@ export default function OnboardingPage() {
                 <p className="text-white/50 mb-8 max-w-sm mx-auto">
                   {cvOptimized
                     ? 'Votre CV a été réécrit pour maximiser les scores ATS et attirer les recruteurs.'
-                    : 'GPT-4o va analyser et réécrire votre CV pour maximiser vos chances de passer les filtres ATS.'
+                    : 'Nos modèles IA vont analyser et réécrire votre CV pour maximiser vos chances de passer les filtres ATS.'
                   }
                 </p>
 

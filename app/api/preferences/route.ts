@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getUserPlan } from '@/lib/get-user-plan'
 
 export async function GET() {
   try {
@@ -62,6 +63,12 @@ export async function POST(request: NextRequest) {
             cv_content,
             cv_id,
             job_preferences: prefs,
+            ...(await getUserPlan(supabase, user.id).then(p => ({
+              _plan: p.plan,
+              _plan_status: p.status,
+              _billing_period: p.billing_period,
+              _plan_expires_at: p.current_period_end,
+            }))),
           }),
         })
       } catch (webhookError) {

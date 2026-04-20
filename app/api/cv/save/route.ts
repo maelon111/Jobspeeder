@@ -30,7 +30,17 @@ export async function POST(req: NextRequest) {
       template: TemplateType
       primaryColor: string
       content: ResumeData
+      settings?: {
+        roundedPhoto?: boolean
+        photoSize?: number
+        photoPositionX?: number
+        photoContainerSize?: number
+      }
     }
+
+    const storedContent = body.settings
+      ? { ...body.content, _settings: body.settings }
+      : body.content
 
     if (body.id) {
       // Update
@@ -40,7 +50,7 @@ export async function POST(req: NextRequest) {
           title: body.title,
           template: body.template,
           primary_color: body.primaryColor,
-          content: body.content,
+          content: storedContent,
           updated_at: new Date().toISOString(),
         })
         .eq('id', body.id)
@@ -57,7 +67,7 @@ export async function POST(req: NextRequest) {
           title: body.title || `CV de ${body.content?.personal?.name || 'Nouveau'}`,
           template: body.template,
           primary_color: body.primaryColor,
-          content: body.content,
+          content: storedContent,
         })
         .select('id')
         .single()

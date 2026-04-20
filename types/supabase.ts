@@ -182,6 +182,49 @@ export type CV = Database['public']['Tables']['cvs']['Row']
 export type JobPreferences = Database['public']['Tables']['job_preferences']['Row']
 export type Application = Database['public']['Tables']['applications']['Row']
 
+// Coach types (tables not in generated schema yet)
+export interface Coach {
+  id: string
+  user_id: string | null
+  slug: string
+  name: string
+  email: string
+  photo_url: string | null
+  bio: string | null
+  specialties: string[]
+  city: string | null
+  country: string
+  referral_code: string | null
+  appo_slug: string | null
+  commission_rate: number
+  status: 'pending' | 'approved' | 'rejected'
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CoachReferral {
+  id: string
+  coach_id: string
+  referred_user_id: string
+  created_at: string
+}
+
+export interface CoachCommission {
+  id: string
+  coach_id: string
+  referred_user_id: string | null
+  stripe_subscription_id: string | null
+  plan: string
+  billing_period: string
+  amount_cents: number
+  commission_cents: number
+  commission_rate: number
+  status: 'pending' | 'paid'
+  period_month: string
+  created_at: string
+}
+
 export type ApplicationStatus = Application['status']
 export type AppliedVia = Application['applied_via']
 

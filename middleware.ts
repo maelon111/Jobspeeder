@@ -1,10 +1,25 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const protectedRoutes = ['/dashboard', '/cv', '/applications', '/job-offers', '/settings', '/onboarding', '/coachs', '/ats-plus']
+const protectedRoutes = ['/dashboard', '/cv', '/applications', '/job-offers', '/settings', '/onboarding', '/coachs', '/ats-plus', '/coach']
 const authRoutes = ['/login', '/register']
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Admin routes — protected by admin_token cookie, not Supabase auth
+  if (pathname.startsWith('/admin')) {
+    if (pathname === '/admin/login') return NextResponse.next()
+    const adminToken = request.cookies.get('admin_token')?.value
+    if (adminToken !== process.env.ADMIN_SECRET) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+    return NextResponse.next()
+  }
+
+  // Coach login is public
+  if (pathname === '/coach/login') return NextResponse.next()
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -28,9 +43,13 @@ export async function middleware(request: NextRequest) {
 
   // getSession() reads JWT from cookie — no network call, reliable on Edge
   const { data: { session } } = await supabase.auth.getSession()
-  const pathname = request.nextUrl.pathname
 
-  const isProtected = protectedRoutes.some((route) => pathname.startsWith(route))
+  // /cv/[id] is a public share page — only protect /cv exactly (the list page)
+  // /coach/register is accessible to any logged-in user (not just coaches)
+  const isProtected = protectedRoutes.some((route: string) => {
+    if (route === '/cv') return pathname === '/cv'
+    return pathname === route || pathname.startsWith(route + '/')
+  })
   if (isProtected && !session) {
     return NextResponse.redirect(new URL('/login', request.url))
   }

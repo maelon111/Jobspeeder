@@ -22,8 +22,13 @@ interface EntryChoiceProps {
 const TEMPLATE_LABELS: Record<TemplateType, string> = {
   modern: 'Moderne',
   minimal: 'Minimaliste',
-  creative: 'Créatif',
   dark: 'Dark',
+  classic: 'Classique',
+  creative: 'Créatif',
+  'model-25': 'Model 25',
+  standard: 'Standard',
+  'standard-pro': 'Standard Pro',
+  'standard-premium': 'Standard Premium',
 }
 
 function timeAgo(iso: string): string {

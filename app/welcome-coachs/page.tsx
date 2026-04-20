@@ -1,7 +1,8 @@
 'use client'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowRight, Users, Zap, Calendar, ChevronRight, Shield, Star, Award } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowRight, Users, Zap, Calendar, ChevronRight, Shield, Star, Award, TrendingUp } from 'lucide-react'
 import { Navbar } from '@/components/landing/Navbar'
 import { useLanguage } from '@/lib/i18n'
 import { useT } from '@/lib/translations'
@@ -28,15 +29,168 @@ function Blobs() {
         @keyframes wc-drift1{0%,100%{transform:translate(0,0)}33%{transform:translate(45px,-35px)}66%{transform:translate(-25px,22px)}}
         @keyframes wc-drift2{0%,100%{transform:translate(0,0)}40%{transform:translate(-35px,28px)}70%{transform:translate(28px,-18px)}}
       `}</style>
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
         <div style={{ position:'absolute', top:'-80px', left:'15%', width:'550px', height:'450px', background:'#00ff88', filter:'blur(55px)', opacity:0.18, animation:'wc-blob-morph 14s ease-in-out infinite, wc-drift1 22s ease-in-out infinite' }} />
         <div style={{ position:'absolute', top:'30%', left:'-8%', width:'420px', height:'380px', background:'#3b82f6', filter:'blur(50px)', opacity:0.12, animation:'wc-blob-morph 18s ease-in-out infinite 2s, wc-drift2 26s ease-in-out infinite 1s' }} />
         <div style={{ position:'absolute', top:'15%', right:'-5%', width:'400px', height:'460px', background:'#a855f7', filter:'blur(50px)', opacity:0.1, animation:'wc-blob-morph 20s ease-in-out infinite 4s' }} />
         <div style={{ position:'absolute', bottom:'10%', right:'20%', width:'300px', height:'260px', background:'#00ff88', filter:'blur(45px)', opacity:0.08, animation:'wc-blob-morph 16s ease-in-out infinite 7s, wc-drift1 28s ease-in-out infinite 3s' }} />
+        {/* dot grid */}
+        <div className="absolute inset-0 opacity-[0.022]" style={{ backgroundImage:'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)', backgroundSize:'32px 32px' }} />
       </div>
-      {/* dot grid */}
-      <div className="absolute inset-0 opacity-[0.022] pointer-events-none" style={{ backgroundImage:'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)', backgroundSize:'32px 32px' }} />
     </>
+  )
+}
+
+/* ─── Coaching simulation section ─── */
+const PRESETS = [
+  { clients: 3, sessions: 1, price: 60 },
+  { clients: 8, sessions: 2, price: 80 },
+  { clients: 15, sessions: 3, price: 100 },
+]
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function HSlider({ label, value, min, max, step = 1, color, unit, onChange }: {
+  label: string; value: number; min: number; max: number; step?: number
+  color: string; unit?: string; onChange: (v: number) => void
+}) {
+  const pct = ((value - min) / (max - min)) * 100
+  return (
+    <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+      <span className="text-white/80 text-sm font-medium md:w-56 md:flex-shrink-0">{label}</span>
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <input
+          type="range" min={min} max={max} step={step} value={value}
+          onChange={e => onChange(Number(e.target.value))}
+          className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer"
+          style={{ background: `linear-gradient(to right, ${color} ${pct}%, rgba(255,255,255,0.1) ${pct}%)`, accentColor: color }}
+        />
+        <span className="font-black text-sm tabular-nums w-16 text-right flex-shrink-0" style={{ color }}>
+          {value}{unit ?? ''}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Commission simulation section ─── */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CommissionSimSection({ c }: { c: any }) {
+  const [gold,     setGold]     = useState(5)
+  const [platinum, setPlatinum] = useState(3)
+  const [elite,    setElite]    = useState(1)
+  const monthly = (gold * 29 + platinum * 59 + elite * 149) * 0.1
+  const annual  = monthly * 12
+
+  return (
+    <section className="relative px-4 py-20">
+      <div className="max-w-3xl mx-auto">
+        <motion.div {...fadeUp(0)} className="glass-strong gradient-border rounded-3xl p-8 md:p-12">
+          {/* Header */}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand/10 border border-brand/20 text-brand text-xs font-bold">
+              <TrendingUp size={12} />
+              {c.commSimBadge ?? 'Simulateur de revenus parrainage'}
+            </div>
+          </div>
+          <h2 className="text-3xl md:text-4xl font-black text-white mb-3">{c.commissionHeadline}</h2>
+          <p className="text-white/50 mb-8 text-sm leading-relaxed">{c.commSimSub ?? c.commissionBody}</p>
+
+          {/* Sliders */}
+          <div className="space-y-5 mb-8">
+            <HSlider label={c.commSimGoldLabel   ?? 'Candidats GOLD · 29 €/mois'}     value={gold}     min={0} max={30} color="#fbbf24" onChange={setGold}     />
+            <HSlider label={c.commSimPlatinumLabel ?? 'Candidats PLATINUM · 59 €/mois'} value={platinum} min={0} max={20} color="#60a5fa" onChange={setPlatinum} />
+            <HSlider label={c.commSimEliteLabel   ?? 'Candidats ELITE · 149 €/mois'}   value={elite}    min={0} max={10} color="#a855f7" onChange={setElite}    />
+          </div>
+
+          {/* Results */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-white/[0.04] border border-white/8 rounded-2xl px-5 py-5">
+              <p className="text-white/40 text-xs font-medium mb-2 uppercase tracking-widest">{c.commSimMonthlyLabel}</p>
+              <p className="text-brand font-black text-3xl tabular-nums">{fmt(monthly)}</p>
+              <p className="text-white/20 text-xs mt-1">/mois</p>
+            </div>
+            <div className="bg-brand/10 border border-brand/25 rounded-2xl px-5 py-5">
+              <p className="text-brand/60 text-xs font-medium mb-2 uppercase tracking-widest">{c.commSimAnnualLabel}</p>
+              <p className="text-brand font-black text-3xl tabular-nums">{fmt(annual)}</p>
+              <p className="text-white/20 text-xs mt-1">/an</p>
+            </div>
+          </div>
+
+          <p className="text-xs text-white/25 text-center">{c.commSimNote}</p>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+function fmt(n: number) {
+  return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function SimulationSection({ c }: { c: any }) {
+  const [clients, setClients] = useState(8)
+  const [sessions, setSessions] = useState(2)
+  const [price, setPrice] = useState(80)
+  const monthly = clients * sessions * price
+  const annual = monthly * 12
+
+  return (
+    <section className="relative px-4 py-20">
+      <div className="max-w-3xl mx-auto">
+        <motion.div {...fadeUp(0)} className="glass-strong gradient-border rounded-3xl p-8 md:p-12">
+          {/* Header */}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand/10 border border-brand/20 text-brand text-xs font-bold">
+              <TrendingUp size={12} />
+              {c.simBadge}
+            </div>
+          </div>
+          <h2 className="text-3xl md:text-4xl font-black text-white mb-3">{c.simHeadline}</h2>
+          <p className="text-white/50 mb-8 text-sm leading-relaxed">{c.simSub}</p>
+
+          {/* Presets */}
+          <div className="flex gap-3 mb-8 flex-wrap">
+            {PRESETS.map((p, i) => (
+              <button
+                key={i}
+                onClick={() => { setClients(p.clients); setSessions(p.sessions); setPrice(p.price) }}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-150 ${
+                  clients === p.clients && sessions === p.sessions && price === p.price
+                    ? 'bg-brand/20 border-brand/50 text-brand'
+                    : 'bg-white/[0.04] border-white/10 text-white/50 hover:text-white/80 hover:border-white/20'
+                }`}
+              >
+                {[c.simPreset1, c.simPreset2, c.simPreset3][i]}
+              </button>
+            ))}
+          </div>
+
+          {/* Sliders */}
+          <div className="space-y-5 mb-8">
+            <HSlider label={c.simClientsLabel}  value={clients}  min={1}  max={20}  color="#00ff88" onChange={setClients}  />
+            <HSlider label={c.simSessionsLabel} value={sessions} min={1}  max={5}   color="#60a5fa" onChange={setSessions} />
+            <HSlider label={c.simPriceLabel}    value={price}    min={40} max={150} step={5} color="#a855f7" unit=" €" onChange={setPrice} />
+          </div>
+
+          {/* Results */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-white/[0.04] border border-white/8 rounded-2xl px-5 py-5">
+              <p className="text-white/40 text-xs font-medium mb-2 uppercase tracking-widest">{c.simMonthlyLabel}</p>
+              <p className="text-brand font-black text-3xl tabular-nums">{fmt(monthly)}</p>
+              <p className="text-white/20 text-xs mt-1">/mois</p>
+            </div>
+            <div className="bg-brand/10 border border-brand/25 rounded-2xl px-5 py-5">
+              <p className="text-brand/60 text-xs font-medium mb-2 uppercase tracking-widest">{c.simAnnualLabel}</p>
+              <p className="text-brand font-black text-3xl tabular-nums">{fmt(annual)}</p>
+              <p className="text-white/20 text-xs mt-1">/an</p>
+            </div>
+          </div>
+
+          <p className="text-xs text-white/25 text-center">{c.simNote}</p>
+        </motion.div>
+      </div>
+    </section>
   )
 }
 
@@ -48,13 +202,12 @@ export default function WelcomeCoachsPage() {
   const c = (tr as any).coaches ?? {}
 
   return (
-    <main className="min-h-screen bg-[#060c16] text-white overflow-x-hidden">
+    <main className="relative min-h-screen bg-[#060c16] text-white overflow-x-hidden">
+      <Blobs />
       <Navbar />
 
       {/* ── 1. HERO ── */}
       <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pb-16 pt-24">
-        <Blobs />
-
         <div className="relative z-10 text-center max-w-4xl mx-auto w-full">
           {/* Badge */}
           <motion.div {...fadeUp(0)} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand/8 border border-brand/20 text-brand text-sm font-medium mb-8">
@@ -207,59 +360,11 @@ export default function WelcomeCoachsPage() {
         </div>
       </section>
 
-      {/* ── 3b. COMMISSION ── */}
-      <section className="relative px-4 py-20">
-        <div className="max-w-3xl mx-auto">
-          <motion.div {...fadeUp(0)} className="glass-strong gradient-border rounded-3xl p-8 md:p-12">
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
-              {c.commissionHeadline}
-            </h2>
-            <p className="text-white/55 leading-relaxed mb-10">{c.commissionBody}</p>
+      {/* ── 3b. SIMULATION ── */}
+      <SimulationSection c={c} />
 
-            {/* Calcul visuel */}
-            <div className="space-y-3 mb-6">
-              <div className="flex items-center justify-between gap-4 bg-white/[0.04] border border-white/8 rounded-xl px-5 py-4">
-                <div>
-                  <span className="text-white/80 text-sm font-medium">{c.commRow1Label}</span>
-                  <span className="text-white/35 text-xs ml-2">{c.commRow1Sub}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-brand font-bold">{c.commRow1Value}</span>
-                  <span className="text-white/30 text-xs">/mois</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between gap-4 bg-white/[0.04] border border-white/8 rounded-xl px-5 py-4">
-                <div>
-                  <span className="text-white/80 text-sm font-medium">{c.commRow2Label}</span>
-                  <span className="text-white/35 text-xs ml-2">{c.commRow2Sub}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-brand font-bold">{c.commRow2Value}</span>
-                  <span className="text-white/30 text-xs">/mois</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between gap-4 bg-brand/10 border border-brand/25 rounded-xl px-5 py-4">
-                <span className="text-white font-bold text-sm">{c.commTotalLabel}</span>
-                <div className="text-right">
-                  <span className="text-brand font-black text-xl">{c.commTotalValue}</span>
-                  <span className="text-white/40 text-xs">/mois</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between gap-4 bg-brand/20 border border-brand/40 rounded-xl px-5 py-4">
-                <div>
-                  <span className="text-white font-black text-sm">{c.commAnnualLabel}</span>
-                  <span className="text-white/40 text-xs ml-2">{c.commAnnualSub}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-brand font-black text-2xl">{c.commAnnualValue}</span>
-                  <span className="text-white/40 text-xs">/an</span>
-                </div>
-              </div>
-            </div>
-            <p className="text-xs text-white/30 text-center">{c.commAnnualNote}</p>
-          </motion.div>
-        </div>
-      </section>
+      {/* ── 3c. COMMISSION ── */}
+      <CommissionSimSection c={c} />
 
       {/* ── 4. COMMENT ÇA FONCTIONNE ── */}
       <section id="comment" className="relative px-4 py-24 max-w-4xl mx-auto">
@@ -434,8 +539,19 @@ export default function WelcomeCoachsPage() {
             <h2 className="text-3xl md:text-4xl font-black text-white mb-6">
               {c.platformHeadline}
             </h2>
+            <p className="text-white/55 text-lg leading-relaxed mb-6">
+              {c.platformIntro}
+            </p>
+            <ul className="text-left inline-block space-y-3 mb-6">
+              {[c.platformBullet1, c.platformBullet2, c.platformBullet3, c.platformBullet4].map((bullet: string, i: number) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="text-brand mt-1 flex-shrink-0">•</span>
+                  <span className="text-white/70 text-lg leading-relaxed">{bullet}</span>
+                </li>
+              ))}
+            </ul>
             <p className="text-white/55 text-lg leading-relaxed">
-              {c.platformBody}
+              {c.platformOutro}
             </p>
           </motion.div>
         </div>

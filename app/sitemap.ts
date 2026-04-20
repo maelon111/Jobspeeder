@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { getAllPosts } from '@/lib/blog-db'
+import { getAllPublishedJobIds } from '@/lib/jobs-db'
 
 const SITE_URL = 'https://jobspeeder.online'
 
@@ -75,7 +76,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // ── Blog posts (individual articles — fetched dynamically from Supabase) ──
+  // ── Blog posts ───────────────────────────────────────────────────────────
   const dbPosts = await getAllPosts()
   const blogPages: MetadataRoute.Sitemap = dbPosts.map((post) => ({
     url: `${SITE_URL}/blog/${post.slug}`,
@@ -84,5 +85,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  return [...staticPages, ...blogPages]
+  // ── Job listings (Google Emploi) ─────────────────────────────────────────
+  const jobIds = await getAllPublishedJobIds()
+  const jobPages: MetadataRoute.Sitemap = [
+    {
+      url: `${SITE_URL}/jobs`,
+      lastModified: new Date().toISOString().split('T')[0],
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    },
+    ...jobIds.map((id) => ({
+      url: `${SITE_URL}/jobs/${id}`,
+      lastModified: new Date().toISOString().split('T')[0],
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    })),
+  ]
+
+  return [...staticPages, ...blogPages, ...jobPages]
 }

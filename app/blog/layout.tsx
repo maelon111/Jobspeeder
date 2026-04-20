@@ -1,12 +1,15 @@
+'use client'
 import { Navbar } from '@/components/landing/Navbar'
 import Link from 'next/link'
 import { Zap, Mail } from 'lucide-react'
+import { BlobBackground } from '@/components/BlobBackground'
 
 export default function BlogLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#060c16] text-white">
+      <BlobBackground />
       <Navbar />
-      <main>{children}</main>
+      <main className="relative z-10">{children}</main>
 
       <footer className="border-t border-white/5 py-10 px-6 mt-4">
         <div className="max-w-5xl mx-auto">

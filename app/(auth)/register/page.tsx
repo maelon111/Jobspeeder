@@ -7,17 +7,20 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import Image from 'next/image'
 import { Mail, Lock, User, Play } from 'lucide-react'
+import { BlobBackground } from '@/components/BlobBackground'
 
 function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const planParam = searchParams.get('plan')
   const billingParam = searchParams.get('billing')
+  const refParam = searchParams.get('ref')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [demoLoading, setDemoLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
 
   async function handleRegister(e: React.FormEvent) {
@@ -30,7 +33,7 @@ function RegisterForm() {
     setError('')
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: name } },
@@ -40,6 +43,15 @@ function RegisterForm() {
       setError(error.message)
       setLoading(false)
     } else {
+      // Enregistre le parrainage si un code de parrainage est présent
+      if (refParam && signUpData.user) {
+        await fetch('/api/referral/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ referral_code: refParam }),
+        }).catch(() => {/* silencieux, non bloquant */})
+      }
+
       if (planParam && planParam !== 'free') {
         // Redirect to checkout after signup
         const res = await fetch('/api/checkout', {
@@ -90,22 +102,23 @@ function RegisterForm() {
   }
 
   async function handleGoogleLogin() {
+    setGoogleLoading(true)
+    setError('')
     const supabase = createClient()
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/onboarding` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=/onboarding` },
     })
+    if (error) {
+      setError('Erreur Google : ' + error.message)
+      setGoogleLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-[#060c16] flex items-center justify-center px-4">
-      {/* Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-brand/5 rounded-full blur-[100px]" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[300px] bg-purple-500/4 rounded-full blur-[80px]" />
-      </div>
-
-      <div className="relative w-full max-w-sm">
+      <BlobBackground />
+      <div className="relative z-10 w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center mb-4 group">
@@ -145,7 +158,8 @@ function RegisterForm() {
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white/[0.04] border border-white/10 rounded-xl text-sm font-medium text-white/70 hover:bg-white/8 hover:text-white hover:border-white/18 transition-all duration-150 mb-4"
+            disabled={googleLoading}
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white/[0.04] border border-white/10 rounded-xl text-sm font-medium text-white/70 hover:bg-white/8 hover:text-white hover:border-white/18 transition-all duration-150 mb-4 disabled:opacity-50"
           >
             <svg width="18" height="18" viewBox="0 0 18 18">
               <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
@@ -153,7 +167,7 @@ function RegisterForm() {
               <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
               <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
             </svg>
-            Continuer avec Google
+            {googleLoading ? 'Redirection...' : 'Continuer avec Google'}
           </button>
 
           <div className="flex items-center gap-3 mb-4">

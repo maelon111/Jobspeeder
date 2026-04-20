@@ -74,27 +74,94 @@ const TEMPLATES: {
   {
     id: 'creative',
     label: 'Créatif',
-    description: 'Sidebar colorée, mise en page dynamique, impact visuel fort.',
+    description: 'Sidebar colorée à gauche, contenu principal à droite, style moderne et professionnel.',
     preview: (
-      <div className="w-full h-full flex bg-white rounded-sm overflow-hidden">
-        <div className="w-10 bg-violet-600 p-1 space-y-1.5 flex flex-col items-center pt-2">
-          <div className="w-6 h-6 rounded-full bg-white/20" />
-          <div className="h-1 bg-white/50 rounded w-full" />
-          <div className="h-1 bg-white/50 rounded w-3/4" />
-          <div className="h-1 bg-white/30 rounded w-full" />
-          <div className="h-1 bg-white/30 rounded w-3/4" />
+      <div className="w-full h-full flex">
+        <div className="w-10 bg-violet-600 rounded-l-sm flex-shrink-0 flex flex-col items-center pt-3 gap-1.5 px-1.5">
+          <div className="w-7 h-7 rounded-full bg-white/20" />
+          <div className="h-0.5 bg-white/50 rounded w-full" />
+          <div className="h-0.5 bg-white/30 rounded w-4/5" />
+          <div className="mt-1 space-y-1 w-full">
+            <div className="h-0.5 bg-white/40 rounded w-full" />
+            <div className="h-0.5 bg-white/30 rounded w-4/5" />
+            <div className="h-0.5 bg-white/30 rounded w-3/5" />
+          </div>
         </div>
-        <div className="flex-1 p-1.5 space-y-1.5">
-          <div className="h-2 bg-gray-300 rounded w-3/4" />
+        <div className="flex-1 p-1.5 space-y-1">
+          <div className="h-2 bg-gray-700 rounded w-3/4" />
           <div className="h-1 bg-violet-300 rounded w-1/2" />
-          <div className="space-y-0.5 mt-1">
+          <div className="mt-1 space-y-0.5">
             <div className="h-1 bg-gray-200 rounded w-full" />
             <div className="h-1 bg-gray-200 rounded w-4/5" />
-            <div className="h-1 bg-gray-100 rounded w-3/5" />
-          </div>
-          <div className="space-y-0.5 mt-1">
-            <div className="h-1 bg-gray-200 rounded w-full" />
             <div className="h-1 bg-gray-200 rounded w-3/5" />
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'classic',
+    label: 'Classique',
+    description: 'Grille bicolonne, photo ronde, contacts avec icônes — style sobre et élégant.',
+    preview: (
+      <div className="w-full h-full bg-white rounded-sm p-2" style={{ display: 'grid', gridTemplateColumns: '35% 60%', gap: '4px 5%' }}>
+        <div className="flex justify-end items-center">
+          <div className="w-7 h-7 rounded-full bg-gray-300" />
+        </div>
+        <div className="border-l border-black pl-1.5 space-y-0.5">
+          <div className="h-2 bg-gray-800 rounded w-16" />
+          <div className="h-1 bg-gray-400 rounded w-10" />
+          <div className="flex items-center gap-0.5 mt-1">
+            <div className="w-2.5 h-2.5 rounded-full bg-black" />
+            <div className="h-1 bg-gray-300 rounded w-8" />
+          </div>
+          <div className="flex items-center gap-0.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-black" />
+            <div className="h-1 bg-gray-300 rounded w-10" />
+          </div>
+        </div>
+        <div className="space-y-0.5 text-right">
+          <div className="h-1 bg-gray-300 rounded" />
+          <div className="h-1 bg-gray-200 rounded w-3/4 ml-auto" />
+          <div className="h-1 bg-gray-200 rounded w-1/2 ml-auto" />
+        </div>
+        <div className="border-l border-black pl-1.5 space-y-0.5">
+          <div className="h-1.5 bg-gray-700 rounded w-10" />
+          <div className="h-1 bg-gray-200 rounded w-full" />
+          <div className="h-1 bg-gray-200 rounded w-4/5" />
+          <div className="h-1 bg-gray-100 rounded w-3/5" />
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'model-25',
+    label: 'Model 25',
+    description: 'Fond sombre, nom en grand, grille 2 colonnes — design impactant et structuré.',
+    preview: (
+      <div className="w-full h-full flex flex-col bg-[#070707] rounded-sm p-2 overflow-hidden">
+        <div className="flex gap-2 items-start mb-2">
+          <div className="w-8 h-8 rounded-full border-2 flex-shrink-0" style={{ borderColor: '#ff7613' }} />
+          <div className="flex-1 space-y-0.5">
+            <div className="h-1 bg-gray-700 rounded w-8" />
+            <div className="h-3 rounded w-16" style={{ background: '#ff7613' }} />
+            <div className="h-1 bg-gray-700 rounded w-12 mt-0.5" />
+          </div>
+        </div>
+        <div className="border-t border-gray-800 my-1" />
+        <div className="flex gap-2 flex-1">
+          <div className="flex-1 space-y-1">
+            <div className="h-0.5 rounded w-10" style={{ background: '#ff7613' }} />
+            <div className="h-1 bg-gray-700 rounded w-full" />
+            <div className="h-1 bg-gray-700 rounded w-4/5" />
+            <div className="h-0.5 rounded w-8 mt-1" style={{ background: '#ff7613' }} />
+            <div className="h-1 bg-gray-700 rounded w-3/4" />
+          </div>
+          <div className="flex-1 space-y-1">
+            <div className="h-0.5 rounded w-10" style={{ background: '#ff7613' }} />
+            <div className="h-1 bg-gray-700 rounded w-full" />
+            <div className="h-1 bg-gray-700 rounded w-4/5" />
+            <div className="h-1 bg-gray-600 rounded w-full" />
           </div>
         </div>
       </div>

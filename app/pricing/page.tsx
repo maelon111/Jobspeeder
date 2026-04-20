@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
   Zap, Check, X, Shield, ChevronDown, Star,
@@ -11,6 +12,7 @@ import { createClient } from '@/lib/supabase/client'
 import { JsonLd } from '@/components/JsonLd'
 import { useLanguage } from '@/lib/i18n'
 import { useT } from '@/lib/translations'
+import { BlobBackground } from '@/components/BlobBackground'
 
 const SITE_URL = 'https://jobspeeder.online'
 
@@ -36,10 +38,10 @@ const pricingAppSchema = {
   url: SITE_URL,
   description: "Automatisez vos candidatures d'emploi grâce à l'IA.",
   offers: [
-    { '@type': 'Offer', name: 'FREE', price: '0', priceCurrency: 'EUR' },
+    { '@type': 'Offer', name: 'DÉCOUVERTE', price: '1', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: 1, priceCurrency: 'EUR', billingDuration: 'P1M' } },
     { '@type': 'Offer', name: 'GOLD', price: '29', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: 29, priceCurrency: 'EUR', billingDuration: 'P1M' } },
     { '@type': 'Offer', name: 'PLATINUM', price: '59', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: 59, priceCurrency: 'EUR', billingDuration: 'P1M' } },
-    { '@type': 'Offer', name: 'ELITE', price: '149', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: 149, priceCurrency: 'EUR', billingDuration: 'P1M' } },
+    { '@type': 'Offer', name: 'ELITE', price: '147', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: 147, priceCurrency: 'EUR', billingDuration: 'P1M' } },
   ],
 }
 
@@ -119,10 +121,6 @@ export default function PricingPage() {
   }, [])
 
   async function handleCTAClick(planId: string) {
-    if (planId === 'free') {
-      router.push('/register')
-      return
-    }
     setLoadingPlan(planId)
     const billing = annual ? 'annual' : 'monthly'
 
@@ -147,10 +145,10 @@ export default function PricingPage() {
   }
 
   const PLANS = [
-    { id: 'free',     name: 'FREE',     tagline: p.plans.free.tagline,     cta: p.plans.free.cta,     monthly: 0,   annualMonthly: 0,   featured: false, elite: false, gold: false, icon: Zap },
-    { id: 'gold',     name: 'GOLD',     tagline: p.plans.gold.tagline,     cta: p.plans.gold.cta,     monthly: 29,  annualMonthly: 23,  featured: false, elite: false, gold: true,  icon: Star },
-    { id: 'platinum', name: 'PLATINUM', tagline: p.plans.platinum.tagline, cta: p.plans.platinum.cta, monthly: 59,  annualMonthly: 47,  featured: true,  elite: false, gold: false, icon: Sparkles, badge: p.popular },
-    { id: 'elite',    name: 'ELITE',    tagline: p.plans.elite.tagline,    cta: p.plans.elite.cta,    monthly: 149, annualMonthly: 119, featured: false, elite: true,  gold: false, icon: Crown },
+    { id: 'decouverte', name: 'DÉCOUVERTE', tagline: p.plans.decouverte.tagline, cta: p.plans.decouverte.cta, monthly: 1,   annualMonthly: 1,   featured: false, elite: false, gold: false, icon: Zap },
+    { id: 'gold',       name: 'GOLD',       tagline: p.plans.gold.tagline,       cta: p.plans.gold.cta,       monthly: 27,  annualMonthly: 22,  featured: false, elite: false, gold: true,  icon: Star },
+    { id: 'platinum',   name: 'PLATINUM',   tagline: p.plans.platinum.tagline,   cta: p.plans.platinum.cta,   monthly: 57,  annualMonthly: 46,  featured: true,  elite: false, gold: false, icon: Sparkles, badge: p.popular },
+    { id: 'elite',      name: 'ELITE',      tagline: p.plans.elite.tagline,      cta: p.plans.elite.cta,      monthly: 147, annualMonthly: 119, featured: false, elite: true,  gold: false, icon: Crown },
   ]
 
   const f = p.features
@@ -173,21 +171,13 @@ export default function PricingPage() {
       <JsonLd data={faqSchema} />
       <JsonLd data={pricingAppSchema} />
       <JsonLd data={pricingBreadcrumbSchema} />
-
-      {/* Ambient */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-brand/5 rounded-full blur-[120px]" />
-        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-blue-500/4 rounded-full blur-[100px]" />
-        <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-purple-500/4 rounded-full blur-[100px]" />
-      </div>
+      <BlobBackground />
+      <div className="relative z-10">
 
       {/* Nav mini */}
       <nav className="px-6 py-4 flex items-center justify-between border-b border-white/[0.05] max-w-7xl mx-auto">
-        <Link href="/" className="inline-flex items-center gap-2.5 font-bold group">
-          <div className="p-1.5 bg-brand rounded-xl">
-            <Zap size={14} className="text-black fill-current" />
-          </div>
-          <span className="text-white text-sm">JobSpeeder</span>
+        <Link href="/" className="inline-flex items-center group">
+          <Image src="/logo-v2.png" alt="JobSpeeder" width={130} height={37} className="h-8 w-auto object-contain" priority />
         </Link>
         <div className="flex items-center gap-3">
           <Link href="/login" className="text-sm text-white/40 hover:text-white/80 transition-colors">{p.nav.login}</Link>
@@ -288,19 +278,18 @@ export default function PricingPage() {
                       <span className="text-4xl font-bold">{price}</span>
                       <span className="text-white/40 mb-1.5 text-sm">{p.perMonth}</span>
                     </div>
-                    {annual && plan.monthly > 0 && (
+                    {annual && plan.monthly > 0 && plan.monthly !== plan.annualMonthly && (
                       <p className="text-xs text-white/30 mt-1">
                         {p.annualSave
                           .replace('{total}', String(annualTotal))
                           .replace('{save}', String((plan.monthly - plan.annualMonthly) * 12))}
                       </p>
                     )}
-                    {!annual && plan.monthly > 0 && (
+                    {!annual && plan.monthly > 0 && plan.monthly !== plan.annualMonthly && (
                       <p className="text-xs text-white/25 mt-1">
                         {p.orAnnual.replace('{price}', String(plan.annualMonthly))}
                       </p>
                     )}
-                    {plan.monthly === 0 && <p className="text-xs text-white/25 mt-1">{p.forever}</p>}
                   </div>
 
                   {/* Features */}
@@ -469,6 +458,7 @@ export default function PricingPage() {
             {p.bottom.login}
           </Link>
         </motion.div>
+      </div>
       </div>
     </div>
   )

@@ -13,8 +13,14 @@ export function Footer({ className = '' }: { className?: string }) {
       <div className="flex flex-col gap-3">
         {/* Legal links */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <Link href="/about" className="text-xs text-white/30 hover:text-white/60 transition-colors">
+            {tr.footer.about}
+          </Link>
+          <Link href="/faq" className="text-xs text-white/30 hover:text-white/60 transition-colors">
+            FAQ
+          </Link>
           <Link href="/pricing" className="text-xs text-white/30 hover:text-white/60 transition-colors">
-            Tarifs
+            {tr.footer.pricing}
           </Link>
           <Link href="/confidentialite" className="text-xs text-white/30 hover:text-white/60 transition-colors">
             {tr.footer.privacy}

@@ -16,12 +16,10 @@ export async function GET(request: NextRequest) {
       select: 'slug,display_name,bio,bio_en,category,metier,secteur,ville,pays,rating,total_reviews,cover_image_url,is_verified,accent_color,instagram_url,linkedin_url,users(avatar_url)',
       onboarding_completed: 'eq.true',
       is_active: 'eq.true',
+      secteur: 'eq.conseil_coaching',
       order: 'rating.desc',
       limit: '100',
     })
-
-    // Filtrer uniquement les profils de type "coach" (cherche dans category ET bio)
-    params.append('or', '(category.ilike.*coach*,metier.ilike.*coach*,category.ilike.*carrière*,category.ilike.*career*,metier.ilike.*carrière*,metier.ilike.*career*,bio.ilike.*coach*,bio.ilike.*ICF*,bio.ilike.*PCC*,bio.ilike.*ACC*,bio.ilike.*MCC*)')
 
     if (ville) params.append('ville', `ilike.*${ville}*`)
     if (pays) params.append('pays', `ilike.*${pays}*`)

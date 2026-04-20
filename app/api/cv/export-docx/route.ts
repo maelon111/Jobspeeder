@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
   Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle,
-  Table, TableRow, TableCell, WidthType, ShadingType, VerticalAlign,
+  Table, TableRow, TableCell, WidthType, ShadingType, VerticalAlign, ImageRun,
 } from 'docx'
 import { ResumeData, TemplateType } from '@/types/resume'
 
@@ -22,13 +22,27 @@ function spacer(pts = 80) {
   return new Paragraph({ spacing: { after: pts } })
 }
 
+function photoToBuffer(dataUrl: string): { buffer: Buffer; type: 'jpg' | 'png' | 'gif' | 'bmp' } | null {
+  try {
+    const match = dataUrl.match(/^data:image\/(jpeg|jpg|png|gif|bmp);base64,(.+)$/)
+    if (!match) return null
+    const type = (match[1] === 'jpeg' ? 'jpg' : match[1]) as 'jpg' | 'png' | 'gif' | 'bmp'
+    return { buffer: Buffer.from(match[2], 'base64'), type }
+  } catch {
+    return null
+  }
+}
+
+
 // ─── Modern template ──────────────────────────────────────────────────────────
 // Colored header + two-column layout (left sidebar 35% / main 65%)
 
-function buildModern(data: ResumeData, accentColor: string): (Paragraph | Table)[] {
+function buildModern(data: ResumeData, accentColor: string, photoSize: number): (Paragraph | Table)[] {
   const p = data.personal
   const contactParts = [p.email, p.phone, p.city, p.linkedin, p.github].filter(Boolean)
   const sections: (Paragraph | Table)[] = []
+  const photoImg = p.photo ? photoToBuffer(p.photo) : null
+  const photoDim = Math.round(60 * photoSize / 100)
 
   // ── Colored header ──────────────────────────────────────────────────────────
   const headerCell = new TableCell({
@@ -36,6 +50,10 @@ function buildModern(data: ResumeData, accentColor: string): (Paragraph | Table)
     borders: noBorders,
     margins: { top: 200, bottom: 200, left: 280, right: 280 },
     children: [
+      ...(photoImg ? [new Paragraph({
+        children: [new ImageRun({ data: photoImg.buffer, type: photoImg.type, transformation: { width: photoDim, height: photoDim } })],
+        spacing: { after: 80 },
+      })] : []),
       new Paragraph({
         children: [new TextRun({ text: p.name || '', bold: true, size: 48, color: 'FFFFFF' })],
       }),
@@ -187,10 +205,18 @@ function sectionHeaderModern(label: string, color: string) {
 // ─── Minimal template ─────────────────────────────────────────────────────────
 // Single column, clean typography, skill tags
 
-function buildMinimal(data: ResumeData, accentColor: string): (Paragraph | Table)[] {
+function buildMinimal(data: ResumeData, accentColor: string, photoSize: number): (Paragraph | Table)[] {
   const p = data.personal
   const contactParts = [p.email, p.phone, p.city, p.linkedin, p.github].filter(Boolean)
   const sections: (Paragraph | Table)[] = []
+  const photoImgMin = p.photo ? photoToBuffer(p.photo) : null
+  if (photoImgMin) {
+    const dim = Math.round(60 * photoSize / 100)
+    sections.push(new Paragraph({
+      children: [new ImageRun({ data: photoImgMin.buffer, type: photoImgMin.type, transformation: { width: dim, height: dim } })],
+      spacing: { after: 60 },
+    }))
+  }
 
   // Name
   sections.push(new Paragraph({
@@ -347,17 +373,14 @@ function buildCreative(data: ResumeData, accentColor: string): (Paragraph | Tabl
   const contactParts = [p.email, p.phone, p.city, p.linkedin].filter(Boolean)
   const initials = (p.name || 'N').charAt(0).toUpperCase()
 
-  // ── Sidebar content ─────────────────────────────────────────────────────────
   const sidebarChildren: Paragraph[] = []
 
-  // Avatar initial
   sidebarChildren.push(new Paragraph({
     children: [new TextRun({ text: initials, bold: true, size: 52, color: 'FFFFFF' })],
     alignment: AlignmentType.CENTER,
     spacing: { after: 120 },
   }))
 
-  // Contact
   if (contactParts.length) {
     sidebarChildren.push(sectionHeaderSidebar('Contact'))
     for (const c of contactParts) {
@@ -369,7 +392,6 @@ function buildCreative(data: ResumeData, accentColor: string): (Paragraph | Tabl
     sidebarChildren.push(spacer(60))
   }
 
-  // Skills
   if (data.skills.length) {
     sidebarChildren.push(sectionHeaderSidebar('Compétences'))
     for (const sk of data.skills) {
@@ -384,7 +406,6 @@ function buildCreative(data: ResumeData, accentColor: string): (Paragraph | Tabl
     sidebarChildren.push(spacer(60))
   }
 
-  // Languages
   if (data.languages.length) {
     sidebarChildren.push(sectionHeaderSidebar('Langues'))
     for (const l of data.languages) {
@@ -398,7 +419,6 @@ function buildCreative(data: ResumeData, accentColor: string): (Paragraph | Tabl
     }
   }
 
-  // ── Main content ────────────────────────────────────────────────────────────
   const mainChildren: Paragraph[] = []
 
   mainChildren.push(new Paragraph({
@@ -516,7 +536,7 @@ function sectionHeaderCreative(label: string, color: string) {
 // ─── Dark template ────────────────────────────────────────────────────────────
 // Dark background, two columns, accent on section titles and last name
 
-function buildDark(data: ResumeData, accentColor: string): { sections: (Paragraph | Table)[], dark: boolean } {
+function buildDark(data: ResumeData, accentColor: string, photoSize: number): { sections: (Paragraph | Table)[], dark: boolean } {
   const p = data.personal
   const BG = '0C0C0C'
   const nameParts = (p.name || '').trim().split(' ')
@@ -524,8 +544,17 @@ function buildDark(data: ResumeData, accentColor: string): { sections: (Paragrap
   const lastName = nameParts[nameParts.length - 1] || p.name || ''
 
   const sections: (Paragraph | Table)[] = []
+  const photoImgDk = p.photo ? photoToBuffer(p.photo) : null
 
   // ── Header ──────────────────────────────────────────────────────────────────
+  if (photoImgDk) {
+    const dim = Math.round(70 * photoSize / 100)
+    sections.push(new Paragraph({
+      children: [new ImageRun({ data: photoImgDk.buffer, type: photoImgDk.type, transformation: { width: dim, height: dim } })],
+      shading: { fill: BG, type: ShadingType.SOLID },
+      spacing: { after: 80 },
+    }))
+  }
   if (firstName) {
     sections.push(new Paragraph({
       children: [new TextRun({ text: firstName.toUpperCase(), size: 32, color: 'FFFFFF' })],
@@ -701,27 +730,29 @@ function darkSectionTitle(label: string, color: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { data, primaryColor, template } = await req.json() as {
+    const { data, primaryColor, template, photoSize } = await req.json() as {
       data: ResumeData
       primaryColor?: string
       template?: TemplateType
+      photoSize?: number
     }
     const p = data.personal
     const accentColor = hex(primaryColor ?? '#7C3AED')
+    const pSize = photoSize ?? 100
 
     let docSections: (Paragraph | Table)[]
     let isDark = false
 
     if (template === 'minimal') {
-      docSections = buildMinimal(data, accentColor)
-    } else if (template === 'creative') {
-      docSections = buildCreative(data, accentColor)
+      docSections = buildMinimal(data, accentColor, pSize)
     } else if (template === 'dark') {
-      const result = buildDark(data, accentColor)
+      const result = buildDark(data, accentColor, pSize)
       docSections = result.sections
       isDark = result.dark
+    } else if (template === 'creative') {
+      docSections = buildCreative(data, accentColor)
     } else {
-      docSections = buildModern(data, accentColor)
+      docSections = buildModern(data, accentColor, pSize)
     }
 
     const doc = new Document({

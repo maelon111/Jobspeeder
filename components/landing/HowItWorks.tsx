@@ -31,7 +31,7 @@ export function HowItWorks() {
       iconBg: 'bg-brand/10',
       iconColor: 'text-brand',
       borderAccent: 'hover:border-brand/30',
-      tag: 'GPT-4o',
+      tag: 'JobSpeeder 3.0',
       tagColor: 'bg-brand/10 text-brand border-brand/20',
     },
     {
