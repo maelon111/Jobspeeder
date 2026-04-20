@@ -41,7 +41,7 @@ export default async function JobsPage() {
       <JobsNavbar />
 
       <main className="flex-1">
-        <div className="max-w-5xl mx-auto px-4 py-16">
+        <div className="max-w-5xl mx-auto px-4 pt-28 pb-16">
           <div className="mb-10">
             <h1 className="text-3xl font-bold mb-3">Offres d&apos;emploi en Belgique</h1>
             <p className="text-gray-400">

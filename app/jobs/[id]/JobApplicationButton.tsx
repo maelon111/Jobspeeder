@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Send } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import type { PublicJob } from '@/lib/jobs-db'
 
 interface JobApplicationButtonProps {
@@ -11,11 +13,17 @@ interface JobApplicationButtonProps {
 export default function JobApplicationButton({ job }: JobApplicationButtonProps) {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   const handleApply = async () => {
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
     setLoading(true)
-    setError(null)
     setSuccess(false)
 
     try {
@@ -50,7 +58,6 @@ export default function JobApplicationButton({ job }: JobApplicationButtonProps)
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de l\'envoi')
       console.error(err)
     } finally {
       setLoading(false)
@@ -68,7 +75,7 @@ export default function JobApplicationButton({ job }: JobApplicationButtonProps)
       } disabled:opacity-60 disabled:cursor-not-allowed`}
     >
       <Send className="w-4 h-4" />
-      {loading ? 'Envoi...' : success ? '✓ Envoyée' : 'Candidature instantée'}
+      {loading ? 'Envoi...' : success ? '✓ Envoyée' : 'Candidature en un clic'}
     </button>
   )
 }

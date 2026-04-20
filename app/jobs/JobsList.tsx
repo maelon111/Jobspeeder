@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MapPin, Briefcase, Clock, Building2, CheckSquare, Square, Send, Search, X } from 'lucide-react'
+import { MapPin, Briefcase, Clock, Building2, CheckSquare, Square, Send, Search, X, ChevronRight } from 'lucide-react'
 import type { PublicJob } from '@/lib/jobs-db'
 import { createClient } from '@/lib/supabase/client'
 
@@ -14,10 +14,18 @@ function formatDate(dateStr: string | null) {
   })
 }
 
-function getLogoUrl(job: PublicJob): string {
-  if (job.logo_url) return job.logo_url
-  const domain = job.employeur?.replace(/\s+.*/g, '').toLowerCase() || 'company'
-  return `https://logo.clearbit.com/${domain}.com`
+function CompanyLogo({ job }: { job: PublicJob }) {
+  const initials = job.employeur
+    .split(' ')
+    .filter((w) => w.length > 0)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('')
+  return (
+    <div className="w-12 h-12 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
+      <span className="text-sm font-bold text-gray-300">{initials}</span>
+    </div>
+  )
 }
 
 interface JobsListProps {
@@ -86,7 +94,7 @@ export default function JobsList({ jobs }: JobsListProps) {
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session) {
-      router.push('/register')
+      router.push('/login')
       return
     }
 
@@ -218,15 +226,7 @@ export default function JobsList({ jobs }: JobsListProps) {
               >
                 <div className="flex items-start gap-4 justify-between">
                   <div className="flex items-start gap-4 flex-1">
-                    <img
-                      src={getLogoUrl(job)}
-                      alt={job.employeur}
-                      className="w-12 h-12 rounded-lg object-contain bg-white p-1 flex-shrink-0"
-                      onError={(e) => {
-                        const img = e.currentTarget
-                        img.style.display = 'none'
-                      }}
-                    />
+                    <CompanyLogo job={job} />
                     <div className="flex-1 min-w-0">
                       <h2 className="font-semibold text-white text-lg leading-tight mb-1">
                         {job.titre}
@@ -266,9 +266,10 @@ export default function JobsList({ jobs }: JobsListProps) {
                   </div>
                   <Link
                     href={`/jobs/${job.id}`}
-                    className="flex-shrink-0 px-4 py-2 rounded-lg bg-brand text-gray-950 text-sm font-medium hover:bg-brand/90 transition-colors whitespace-nowrap ml-4"
+                    className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg bg-gray-800 border border-gray-700 hover:border-brand hover:text-brand text-gray-400 transition-colors ml-4"
+                    aria-label="Voir les détails"
                   >
-                    Consulter
+                    <ChevronRight className="w-5 h-5" />
                   </Link>
                 </div>
               </div>

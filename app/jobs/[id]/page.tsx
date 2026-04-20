@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { MapPin, Briefcase, Clock, Building2, ExternalLink, GraduationCap, Languages, Car, Send } from 'lucide-react'
+import { MapPin, Briefcase, Clock, Building2, GraduationCap, Languages, Car } from 'lucide-react'
 import { JsonLd } from '@/components/JsonLd'
 import { getJobById } from '@/lib/jobs-db'
 import JobApplicationButton from './JobApplicationButton'
+import { JobsNavbar, JobsFooter } from '@/components/JobsPageLayout'
 
 export const dynamic = 'force-dynamic'
 
@@ -87,11 +88,18 @@ function formatDate(dateStr: string | null) {
   })
 }
 
-function getLogoUrl(job: Awaited<ReturnType<typeof getJobById>>) {
-  if (!job) return ''
-  if (job.logo_url) return job.logo_url
-  const domain = job.employeur?.replace(/\s+.*/g, '').toLowerCase() || 'company'
-  return `https://logo.clearbit.com/${domain}.com`
+function CompanyLogoDetail({ job }: { job: NonNullable<Awaited<ReturnType<typeof getJobById>>> }) {
+  const initials = job.employeur
+    .split(' ')
+    .filter((w: string) => w.length > 0)
+    .slice(0, 2)
+    .map((w: string) => w[0]?.toUpperCase() ?? '')
+    .join('')
+  return (
+    <div className="w-16 h-16 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
+      <span className="text-lg font-bold text-gray-300">{initials}</span>
+    </div>
+  )
 }
 
 export default async function JobDetailPage({ params }: Props) {
@@ -111,11 +119,12 @@ export default async function JobDetailPage({ params }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col">
       {jobSchema && <JsonLd data={jobSchema} />}
       <JsonLd data={breadcrumbSchema} />
+      <JobsNavbar />
 
-      <div className="max-w-3xl mx-auto px-4 py-16">
+      <div className="max-w-3xl mx-auto px-4 pt-28 pb-16">
         <Link href="/jobs" className="text-sm text-gray-400 hover:text-white mb-8 inline-flex items-center gap-1">
           ← Toutes les offres
         </Link>
@@ -123,11 +132,7 @@ export default async function JobDetailPage({ params }: Props) {
         {/* Header */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 mb-6">
           <div className="flex items-start gap-5 mb-6">
-            <img
-              src={getLogoUrl(job)}
-              alt={job.employeur}
-              className="w-16 h-16 rounded-xl object-contain bg-white p-1.5 flex-shrink-0"
-            />
+            <CompanyLogoDetail job={job} />
             <div>
               <h1 className="text-2xl font-bold mb-1">{job.titre}</h1>
               <p className="text-brand font-medium">{job.employeur}</p>
@@ -186,15 +191,6 @@ export default async function JobDetailPage({ params }: Props) {
             </span>
             <div className="flex items-center gap-2">
               <JobApplicationButton job={job} />
-              <a
-                href={job.lien_candidature}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-gray-700 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-gray-600 transition-colors text-sm"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Via Le Forem
-              </a>
             </div>
           </div>
         </div>
@@ -229,6 +225,7 @@ export default async function JobDetailPage({ params }: Props) {
           </section>
         )}
       </div>
-    </main>
+      <JobsFooter />
+    </div>
   )
 }
