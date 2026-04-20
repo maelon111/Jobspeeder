@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { MapPin, Briefcase, Clock, Building2, ExternalLink, GraduationCap, Languages, Car } from 'lucide-react'
+import { MapPin, Briefcase, Clock, Building2, ExternalLink, GraduationCap, Languages, Car, Send } from 'lucide-react'
 import { JsonLd } from '@/components/JsonLd'
 import { getJobById } from '@/lib/jobs-db'
+import JobApplicationButton from './JobApplicationButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,6 +87,13 @@ function formatDate(dateStr: string | null) {
   })
 }
 
+function getLogoUrl(job: Awaited<ReturnType<typeof getJobById>>) {
+  if (!job) return ''
+  if (job.logo_url) return job.logo_url
+  const domain = job.employeur?.replace(/\s+.*/g, '').toLowerCase() || 'company'
+  return `https://logo.clearbit.com/${domain}.com`
+}
+
 export default async function JobDetailPage({ params }: Props) {
   const { id } = await params
   const job = await getJobById(id)
@@ -115,13 +123,15 @@ export default async function JobDetailPage({ params }: Props) {
         {/* Header */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 mb-6">
           <div className="flex items-start gap-5 mb-6">
-            {job.logo_url && (
-              <img
-                src={job.logo_url}
-                alt={job.employeur}
-                className="w-16 h-16 rounded-xl object-contain bg-white p-1.5 flex-shrink-0"
-              />
-            )}
+            <img
+              src={getLogoUrl(job)}
+              alt={job.employeur}
+              className="w-16 h-16 rounded-xl object-contain bg-white p-1.5 flex-shrink-0"
+              onError={(e) => {
+                const img = e.currentTarget
+                img.style.display = 'none'
+              }}
+            />
             <div>
               <h1 className="text-2xl font-bold mb-1">{job.titre}</h1>
               <p className="text-brand font-medium">{job.employeur}</p>
@@ -178,15 +188,18 @@ export default async function JobDetailPage({ params }: Props) {
               Publié le {formatDate(job.date_publication)}
               {job.date_limite && ` · Expire le ${formatDate(job.date_limite)}`}
             </span>
-            <a
-              href={job.lien_candidature}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-brand text-white px-5 py-2.5 rounded-lg font-medium hover:bg-brand/90 transition-colors text-sm"
-            >
-              Postuler sur Le Forem
-              <ExternalLink className="w-4 h-4" />
-            </a>
+            <div className="flex items-center gap-2">
+              <JobApplicationButton job={job} />
+              <a
+                href={job.lien_candidature}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-gray-700 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-gray-600 transition-colors text-sm"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Via Le Forem
+              </a>
+            </div>
           </div>
         </div>
 
@@ -219,20 +232,6 @@ export default async function JobDetailPage({ params }: Props) {
             </div>
           </section>
         )}
-
-        {/* CTA JobSpeeder */}
-        <div className="bg-brand/10 border border-brand/20 rounded-2xl p-8 text-center">
-          <h3 className="font-semibold text-lg mb-2">Postulez plus vite avec JobSpeeder</h3>
-          <p className="text-gray-400 text-sm mb-4">
-            Générez une candidature personnalisée en 30 secondes grâce à l&apos;IA.
-          </p>
-          <Link
-            href="/register"
-            className="inline-flex items-center gap-2 bg-brand text-white px-6 py-3 rounded-lg font-medium hover:bg-brand/90 transition-colors"
-          >
-            Essayer gratuitement
-          </Link>
-        </div>
       </div>
     </main>
   )

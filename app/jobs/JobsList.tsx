@@ -209,62 +209,69 @@ export default function JobsList({ jobs }: JobsListProps) {
                 )}
               </button>
 
-              <Link
-                href={`/jobs/${job.id}`}
-                className={`block bg-gray-900 border rounded-xl p-5 pl-14 transition-colors cursor-pointer ${
+              <div
+                className={`block bg-gray-900 border rounded-xl p-5 pl-14 transition-colors ${
                   isSelected
                     ? 'border-brand/60 bg-brand/5'
                     : 'border-gray-800 hover:border-brand/50 hover:bg-gray-900/80'
                 }`}
               >
-                <div className="flex items-start gap-4">
-                  <img
-                    src={getLogoUrl(job)}
-                    alt={job.employeur}
-                    className="w-12 h-12 rounded-lg object-contain bg-white p-1 flex-shrink-0"
-                    onError={(e) => {
-                      const img = e.currentTarget
-                      img.style.display = 'none'
-                    }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h2 className="font-semibold text-white text-lg leading-tight mb-1">
-                      {job.titre}
-                    </h2>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-400">
-                      {job.employeur && (
-                        <span className="flex items-center gap-1">
-                          <Building2 className="w-3.5 h-3.5" />
-                          {job.employeur}
-                        </span>
-                      )}
-                      {job.localisation && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5" />
-                          {job.localisation}
-                        </span>
-                      )}
-                      {job.type_contrat && (
-                        <span className="flex items-center gap-1">
-                          <Briefcase className="w-3.5 h-3.5" />
-                          {job.type_contrat}
-                        </span>
-                      )}
-                      {job.date_publication && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          {formatDate(job.date_publication)}
+                <div className="flex items-start gap-4 justify-between">
+                  <div className="flex items-start gap-4 flex-1">
+                    <img
+                      src={getLogoUrl(job)}
+                      alt={job.employeur}
+                      className="w-12 h-12 rounded-lg object-contain bg-white p-1 flex-shrink-0"
+                      onError={(e) => {
+                        const img = e.currentTarget
+                        img.style.display = 'none'
+                      }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h2 className="font-semibold text-white text-lg leading-tight mb-1">
+                        {job.titre}
+                      </h2>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-400">
+                        {job.employeur && (
+                          <span className="flex items-center gap-1">
+                            <Building2 className="w-3.5 h-3.5" />
+                            {job.employeur}
+                          </span>
+                        )}
+                        {job.localisation && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5" />
+                            {job.localisation}
+                          </span>
+                        )}
+                        {job.type_contrat && (
+                          <span className="flex items-center gap-1">
+                            <Briefcase className="w-3.5 h-3.5" />
+                            {job.type_contrat}
+                          </span>
+                        )}
+                        {job.date_publication && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            {formatDate(job.date_publication)}
+                          </span>
+                        )}
+                      </div>
+                      {job.metier && (
+                        <span className="inline-block mt-2 text-xs px-2 py-0.5 rounded-full bg-brand/10 text-brand border border-brand/20">
+                          {job.metier}
                         </span>
                       )}
                     </div>
-                    {job.metier && (
-                      <span className="inline-block mt-2 text-xs px-2 py-0.5 rounded-full bg-brand/10 text-brand border border-brand/20">
-                        {job.metier}
-                      </span>
-                    )}
                   </div>
+                  <Link
+                    href={`/jobs/${job.id}`}
+                    className="flex-shrink-0 px-4 py-2 rounded-lg bg-brand text-gray-950 text-sm font-medium hover:bg-brand/90 transition-colors whitespace-nowrap ml-4"
+                  >
+                    Consulter
+                  </Link>
                 </div>
-              </Link>
+              </div>
             </div>
           )
         })}
