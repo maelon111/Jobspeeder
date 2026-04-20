@@ -127,10 +127,6 @@ export default async function JobDetailPage({ params }: Props) {
               src={getLogoUrl(job)}
               alt={job.employeur}
               className="w-16 h-16 rounded-xl object-contain bg-white p-1.5 flex-shrink-0"
-              onError={(e) => {
-                const img = e.currentTarget
-                img.style.display = 'none'
-              }}
             />
             <div>
               <h1 className="text-2xl font-bold mb-1">{job.titre}</h1>
