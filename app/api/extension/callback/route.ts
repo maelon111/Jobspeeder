@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
       step_count,
       failure_reason,
       total_fields_detected,
+      events,
     } = body
 
     if (!status) {
@@ -77,6 +78,7 @@ export async function POST(req: NextRequest) {
       step_count: typeof step_count === 'number' ? step_count : null,
       failure_reason: failure_reason ? String(failure_reason) : null,
       total_fields_detected: typeof total_fields_detected === 'number' ? total_fields_detected : null,
+      events: Array.isArray(events) ? events : null,
     })
 
     if (error) {

@@ -21,6 +21,7 @@ type FillAttempt = {
   step_count: number | null
   failure_reason: string | null
   total_fields_detected: number | null
+  events: { t: number; s: string; e: string; d: string | null; url?: string | null }[] | null
 }
 
 type Stats = {
@@ -31,6 +32,7 @@ type Stats = {
   avgDurationMs: number
   withAI: number
   topMissingFields: { field: string; count: number }[]
+  blockedDomains: string[]
 }
 
 const STATUS_CONFIG: Record<string, { label: string; badge: string; icon: typeof CheckCircle; color: string }> = {
@@ -70,7 +72,9 @@ function RowDetail({ row }: { row: FillAttempt }) {
   const [open, setOpen] = useState(false)
   const hasDetail = (row.fields_map && Object.keys(row.fields_map).length > 0) ||
                     (row.missing_fields && row.missing_fields.length > 0) ||
-                    (row.validation_errors && row.validation_errors.length > 0)
+                    (row.validation_errors && row.validation_errors.length > 0) ||
+                    (row.events && row.events.length > 0) ||
+                    !!(row.failure_reason || row.step_count != null || row.total_fields_detected != null)
 
   return (
     <>
@@ -130,6 +134,7 @@ function RowDetail({ row }: { row: FillAttempt }) {
         <tr className="bg-white/[0.015] border-b border-white/[0.04]">
           <td colSpan={10} className="px-5 py-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+
               {row.fields_map && Object.keys(row.fields_map).length > 0 && (
                 <div>
                   <p className="text-white/25 uppercase tracking-widest text-[10px] font-semibold mb-2">Champs remplis</p>
@@ -189,6 +194,31 @@ function RowDetail({ row }: { row: FillAttempt }) {
                 </div>
               )}
             </div>
+
+            {/* Timeline des événements — pleine largeur */}
+            {row.events && row.events.length > 0 && (
+              <div className="mt-5 border-t border-white/[0.05] pt-4">
+                <p className="text-white/25 uppercase tracking-widest text-[10px] font-semibold mb-2">
+                  Journal d&apos;actions ({row.events.length} événements)
+                </p>
+                <div className="max-h-56 overflow-y-auto space-y-0.5 pr-1">
+                  {row.events.map((ev, i) => {
+                    const color = ev.s === 'error' ? 'text-red-400/70'
+                      : ev.s === 'warning' ? 'text-yellow-400/70'
+                      : ev.s === 'success' ? 'text-green-400/70'
+                      : 'text-white/40'
+                    const ms = ev.t != null ? `+${(ev.t / 1000).toFixed(1)}s` : ''
+                    return (
+                      <div key={i} className="flex gap-2 font-mono text-[10px] leading-5">
+                        <span className="text-white/20 w-12 shrink-0 text-right">{ms}</span>
+                        <span className={`w-36 shrink-0 truncate ${color}`}>{ev.e}</span>
+                        <span className="text-white/50 truncate">{ev.d}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </td>
         </tr>
       )}
@@ -299,6 +329,21 @@ export default function FormFillsPage() {
                   </button>
                 )
               })}
+          </div>
+        </div>
+      )}
+
+      {/* Domaines bloqués — 3+ DEAD_END sans aucun succès */}
+      {stats && stats.blockedDomains.length > 0 && (
+        <div className="glass rounded-2xl border border-red-500/10 p-5 mb-6">
+          <h2 className="font-semibold text-sm text-white mb-1">Domaines bloqués</h2>
+          <p className="text-white/30 text-xs mb-3">3+ DEAD_END sans succès — automatiquement ignorés par l&apos;extension</p>
+          <div className="flex flex-wrap gap-2">
+            {stats.blockedDomains.map(d => (
+              <span key={d} className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs border bg-red-500/5 border-red-500/15 text-red-300/80">
+                {d}
+              </span>
+            ))}
           </div>
         </div>
       )}
